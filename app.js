@@ -1,7 +1,7 @@
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ════════════════════════════════════════════════════════════════
    Telegram Mini App (Claude Editorial Edition)
    State Machine Navigation • Dual API Architecture • Live Sync
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   ════════════════════════════════════════════════════════════════ */
 
 // ─── Global Configuration ──────────────────────────────────────
 const CONFIG = {
@@ -23,14 +23,14 @@ const CONFIG = {
   TABS: [
     { type: 'Videos',    label: 'Lectures', icon: '🎬' },
     { type: 'Notes',     label: 'Notes',    icon: '📄' },
-    { type: 'DppNotes',  label: 'DPP',      icon: 'ðŸ“' },
+    { type: 'DppNotes',  label: 'DPP',      icon: 'ðŸ“' },
     { type: 'DppVideos', label: 'DPP Vid',  icon: '📹' },
   ],
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 1: CLIENT-SIDE SECURITY SHIELD & DEVTOOLS DETERRENT
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 (function initClientSecurity() {
   // 1. Disable Right-Click Context Menu
   document.addEventListener('contextmenu', (e) => {
@@ -139,9 +139,9 @@ const state = {
   lastSentType: null,
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 1: TELEGRAM HMAC REQUEST SIGNING & ANTISPRAY INTERCEPTOR
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 const _nativeFetch = window.fetch;
 window.fetch = function(url, options = {}) {
   const initData = getTelegramInitData();
@@ -160,9 +160,9 @@ window.fetch = function(url, options = {}) {
   return _nativeFetch(url, options);
 };
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 1.5: ANTI-INSPECT & DEVTOOLS BLOCKED
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault();
   return false;
@@ -276,10 +276,10 @@ function getServerBaseUrl() {
   return '';
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 2: PERSISTENT WEBSOCKET TUNNEL (wss://) & ROLLING TOKEN SYSTEM
 // Eliminates all Fetch/XHR network requests (0 items in Network tab)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 const WSBridge = {
   socket: null,
   connected: false,
@@ -640,9 +640,9 @@ function initTelegram() {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 2: TELEGRAM-ONLY ACCESS GATEWAY (DIRECT BROWSER LOCK)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 function verifyTelegramAccess() {
   const initData = getTelegramInitData();
   const hasInitData = Boolean(initData && initData.length > 0);
@@ -662,9 +662,9 @@ function verifyTelegramAccess() {
   return true;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 // LAYER 3: IN-APP FORCESUB COMMUNITY VERIFICATION GATEWAY
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 async function checkInAppForceSub(manualVerify = false) {
   const userId = state.chatId || window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
   const isLocalhost = Boolean(
@@ -770,7 +770,7 @@ window.verifySubFromMiniApp = async function() {
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>â³ Verifying Membership...</span>';
+    btn.innerHTML = '<span>â³ Verifying Membership...</span>';
   }
   try {
     const ok = await checkInAppForceSub(true);
@@ -809,7 +809,7 @@ window.checkMaintenanceAgain = async function() {
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>â³ Checking Status...</span>';
+    btn.innerHTML = '<span>â³ Checking Status...</span>';
   }
   try {
     const ok = await checkInAppForceSub(true);
@@ -886,7 +886,7 @@ function updateBreadcrumbs(view) {
   }
   if (view === 'guru') {
     bar.classList.remove('hidden');
-    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span> <span class="crumb-sep">â€º</span> <span class="crumb-current">🤖 ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
+    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span> <span class="crumb-sep">›</span> <span class="crumb-current">🤖 ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
     return;
   }
 
@@ -1020,31 +1020,31 @@ function applyBrandConfig(cfg) {
 }
 
 
-  crumbs.push(`<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span>`);
+  crumbs.push(`<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span>`);
 
   if (view === 'home') {
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-current" title="${p.name}">${p.icon} ${p.name}</span>`);
   } else if (view === 'batch') {
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('home')" title="${p.name}">${p.icon} ${p.name}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-current" title="${bName}">${bName}</span>`);
   } else if (view === 'subject') {
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('home')" title="${p.name}">${p.icon} ${p.name}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('batch')" title="${bName}">${bName}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-current" title="${sName}">${sName}</span>`);
   } else if (view === 'content') {
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('home')" title="${p.name}">${p.icon} ${p.name}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('batch')" title="${bName}">${bName}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-link" onclick="navigate('subject')" title="${sName}">${sName}</span>`);
-    crumbs.push(`<span class="crumb-sep">â€º</span>`);
+    crumbs.push(`<span class="crumb-sep">›</span>`);
     crumbs.push(`<span class="crumb-current" title="${tName}">${tName}</span>`);
   }
 
@@ -1121,23 +1121,21 @@ async function fetchBatchContent(batchId, subjectId, topicId, type = 'Videos', p
   const safeBatch   = encodeURIComponent(batchId   || '');
   const safeSubject = encodeURIComponent(subjectId || '');
   const safeTopic   = encodeURIComponent(topicId   || '');
+  const providerParam = state.provider ? `&provider=${encodeURIComponent(state.provider)}` : '';
 
-  // 1. Primary: learnxpw.site /api/TopicInfo (via server proxy)
-  //    Works for PW provider. Route: /api/batch/:b/subject/:s/topic/:t/content
-  if (state.provider === 'pw' || !state.provider) {
-    try {
-      const res = await serverGet(
-        `/api/batch/${safeBatch}/subject/${safeSubject}/topic/${safeTopic}/content?type=${type}&page=${page}`
-      );
-      // learnxpw returns {data:[]} when page is exhausted
-      if (res && Array.isArray(res.data)) return res;
-      if (res && Array.isArray(res)) return { data: res };
-    } catch (err) {
-      console.warn(`[fetchBatchContent] learnxpw failed (${type}):`, err.message);
-    }
+  // 1. Primary: Unified Topic content route (PW & Multi-Providers)
+  try {
+    const res = await serverGet(
+      `/api/batch/${safeBatch}/subject/${safeSubject}/topic/${safeTopic}/content?type=${type}&page=${page}${providerParam}`
+    );
+    if (res && Array.isArray(res.data) && res.data.length > 0) return res;
+    if (res && Array.isArray(res) && res.length > 0) return { data: res };
+    if (res && res.data && !Array.isArray(res.data)) return res;
+  } catch (err) {
+    console.warn(`[fetchBatchContent] Topic route failed (${type}):`, err.message);
   }
 
-  // 2. Fallback: pimaxer proxy for non-PW providers (nexttopper, missionjeet etc.)
+  // 2. Fallback: Subject content route with tag filter
   try {
     const safeTag = encodeURIComponent(topicId || '');
     let contentType = type;
@@ -1145,7 +1143,6 @@ async function fetchBatchContent(batchId, subjectId, topicId, type = 'Videos', p
     else if (type.toLowerCase() === 'videos') contentType = 'Videos';
     else if (type.toLowerCase() === 'dppnotes') contentType = 'DppNotes';
     else if (type.toLowerCase() === 'dppvideos') contentType = 'DppVideos';
-    const providerParam = state.provider ? `&provider=${state.provider}` : '';
     const res = await serverGet(
       `/api/batch/${safeBatch}/subject/${safeSubject}/content?tag=${safeTag}&type=${contentType}&page=${page}${providerParam}`
     );
@@ -1153,10 +1150,10 @@ async function fetchBatchContent(batchId, subjectId, topicId, type = 'Videos', p
     if (res && Array.isArray(res)) return { data: res };
     if (res && res.data) return res;
   } catch (err) {
-    console.warn(`[fetchBatchContent] Pimaxer fallback failed (${type}):`, err.message);
+    console.warn(`[fetchBatchContent] Fallback content failed (${type}):`, err.message);
   }
 
-  throw new Error(`Unable to load ${type} content`);
+  return { success: true, data: [] };
 }
 
 
@@ -1222,9 +1219,9 @@ function skeletonRows(count = 4) {
   `).join('');
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // VIEW 1: HOME — Batches & Search & Multi-Provider
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 const PROVIDERS = {
   pw: { name: 'Physics Wallah', appId: '5eb393ee95fab7468a79d189', icon: '🌟' },
@@ -1417,7 +1414,7 @@ function renderBatchCard(b) {
         ${img ? `<img class="batch-card-img" src="${img}" alt="${name}" loading="lazy" onerror="this.style.display='none'" />` : ''}
         <div class="batch-card-overlay"></div>
         <button class="batch-card-fav-btn" onclick="event.stopPropagation(); toggleFavourite('${bId}')" id="heart-${bId}">
-          ${isFav ? 'â¤ï¸' : 'ðŸ¤'}
+          ${isFav ? 'â¤ï¸' : 'ðŸ¤'}
         </button>
       </div>
       <div class="batch-card-body">
@@ -1466,7 +1463,7 @@ function openBatch(batchRef) {
   document.getElementById('batch-hero-class').textContent = b.class ? `Class ${b.class}` : (PROVIDERS[state.provider]?.name || (window.APP_CONFIG?.BOT_NAME || 'Study Hub'));
 
   const batchHeartEl = document.getElementById('batch-view-heart');
-  if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? 'â¤ï¸' : 'ðŸ¤';
+  if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? 'â¤ï¸' : 'ðŸ¤';
 }
 
 // ─── Instant Search Engine ─────────────────────────────────────
@@ -1504,7 +1501,7 @@ async function doSearch(q) {
   const panel = document.getElementById('search-results-panel');
   if (!panel) return;
   panel.classList.remove('hidden');
-  panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">ðŸ”</div><div class="empty-state-title">Searching...</div></div>`;
+  panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">ðŸ”</div><div class="empty-state-title">Searching...</div></div>`;
 
   try {
     const providerParam = state.provider ? `&provider=${state.provider}` : '';
@@ -1539,9 +1536,9 @@ async function doSearch(q) {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // VIEW 2: BATCH — Subjects
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 async function loadSubjects(batchId) {
   const thisEpoch = state.providerEpoch || 0;
@@ -1577,7 +1574,7 @@ async function loadSubjects(batchId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">⚠️ï¸</div>
+        <div class="error-state-icon">⚠️ï¸</div>
         <div class="error-state-title">Failed to load subjects</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadSubjects('${batchId}')">Retry</button>
@@ -1658,9 +1655,9 @@ function openSubject(subjectRef) {
   if (backName) backName.textContent = state.batch?.name?.slice(0, 18) || 'Subjects';
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // VIEW 3: SUBJECT — Topics / Chapters
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 async function loadTopics(batchId, subjectId) {
   const thisEpoch = state.providerEpoch || 0;
@@ -1695,7 +1692,7 @@ async function loadTopics(batchId, subjectId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">⚠️ï¸</div>
+        <div class="error-state-icon">⚠️ï¸</div>
         <div class="error-state-title">Failed to load chapters</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadTopics('${batchId}','${subjectId}')">Retry</button>
@@ -1802,9 +1799,9 @@ function openTopic(topicRef) {
   });
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // VIEW 4: CONTENT — Lectures, Notes, DPPs
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 function switchTab(type) {
   if (state.activeTab === type) return;
@@ -1834,7 +1831,7 @@ function updateContentLoadMore(type) {
     lmBtn.disabled = state.contentLoading;
     if (!state.contentLoading) {
       const typeLabel = CONFIG.TABS.find(t => t.type === type)?.label || 'Items';
-      lmBtn.innerHTML = `<span class="btn-load-more-text">Load More ${typeLabel}</span><span class="btn-load-more-arrow">â†“</span>`;
+      lmBtn.innerHTML = `<span class="btn-load-more-text">Load More ${typeLabel}</span><span class="btn-load-more-arrow">←“</span>`;
     }
     lmBtn.onclick = () => loadContent(type, false);
   } else {
@@ -1874,7 +1871,7 @@ async function loadContent(type, reset = false) {
     updateContentLoadMore(type);
   } else if (lmBtn) {
     lmBtn.disabled = true;
-    lmBtn.innerHTML = `<span class="btn-load-more-text">â³ Loading Page ${state.contentPage[type]}...</span>`;
+    lmBtn.innerHTML = `<span class="btn-load-more-text">â³ Loading Page ${state.contentPage[type]}...</span>`;
   }
 
   const batchId = state.batch._id;
@@ -1911,7 +1908,7 @@ async function loadContent(type, reset = false) {
       if (newItems.length === 0) {
         // No new items: The server returned the same dataset or reached the end
         state.contentHasMore[type] = false;
-        showToast('ℹ️ï¸ All items loaded');
+        showToast('ℹ️ï¸ All items loaded');
       } else {
         state.content[type].push(...newItems);
         state.contentPage[type]++;
@@ -1941,13 +1938,13 @@ async function loadContent(type, reset = false) {
     if (reset) {
       list.innerHTML = `
         <div class="error-state">
-          <div class="error-state-icon">⚠️ï¸</div>
+          <div class="error-state-icon">⚠️ï¸</div>
           <div class="error-state-title">Failed to load content</div>
           <div class="error-state-msg">${err.message}</div>
           <button class="retry-btn" onclick="loadContent('${type}', true)">Retry</button>
         </div>`;
     } else {
-      showToast('âŒ Failed to load more items');
+      showToast('âŒ Failed to load more items');
     }
   } finally {
     state.contentLoading = false;
@@ -2055,7 +2052,7 @@ async function handleStreamPlay(itemId, type) {
   haptic('medium');
   const item = state.loadedPayloads[itemId];
   if (!item) {
-    showToast('âŒ Video item not found');
+    showToast('âŒ Video item not found');
     return;
   }
 
@@ -2064,7 +2061,7 @@ async function handleStreamPlay(itemId, type) {
   const contentId = item.contentId || item._id || item.id || '';
   const name = item.videoDetails?.name || item.name || item.topic || 'Lecture';
 
-  showToast('â³ Loading video player...');
+  showToast('â³ Loading video player...');
 
   try {
     const res = await serverGet(
@@ -2074,7 +2071,7 @@ async function handleStreamPlay(itemId, type) {
 
     const streamUrl = res?.data?.link || res?.link || '';
     if (!streamUrl) {
-      showToast('⚠️ï¸ Video stream is currently unavailable. Please try another lecture.');
+      showToast('⚠️ï¸ Video stream is currently unavailable. Please try another lecture.');
       return;
     }
 
@@ -2095,7 +2092,7 @@ async function handleStreamPlay(itemId, type) {
     launchRangeXPlayer();
   } catch (err) {
     console.error('Error fetching stream details:', err);
-    showToast('âŒ Video stream currently unavailable');
+    showToast('âŒ Video stream currently unavailable');
   }
 }
 
@@ -2129,7 +2126,7 @@ function renderNotesItem(item, type) {
     return `
     <div class="content-item" onclick="sendContent('${payloadKey}', '${type}')">
       <div class="content-doc-icon-wrap ${isDpp ? 'doc-dpp-icon' : 'doc-notes-icon'}">
-        ${isDpp ? 'ðŸ“' : '📄'}
+        ${isDpp ? 'ðŸ“' : '📄'}
       </div>
       <div class="content-info-block">
         <div class="content-item-name">${name}</div>
@@ -2161,7 +2158,7 @@ async function sendContent(keyOrItem, type) {
   }
 
   if (!item) {
-    showToast('âŒ Item data not found');
+    showToast('âŒ Item data not found');
     state.isSending = false;
     return;
   }
@@ -2229,7 +2226,7 @@ async function sendContent(keyOrItem, type) {
 
   // For AS Multiverse providers Notes: resolve live CloudFront PDF URL if needed
   if (!isVideo && !pdfUrl && isStreamProvider(state.provider)) {
-    showToast('â³ Fetching PDF document...');
+    showToast('â³ Fetching PDF document...');
     try {
       const res = await serverGet(
         `/api/batch/${encodeURIComponent(batchId)}/subject/${encodeURIComponent(subjectId)}/content/${encodeURIComponent(contentId)}/details?provider=${state.provider}`
@@ -2255,17 +2252,17 @@ async function sendContent(keyOrItem, type) {
   // For Notes/DPP: require either pdfUrl OR contentId
   // For Videos: require batchId + contentId
   if (isVideo && (!batchId || !contentId)) {
-    showToast('âŒ Could not identify content');
+    showToast('âŒ Could not identify content');
     state.isSending = false;
     return;
   }
   if (!isVideo && !pdfUrl && !contentId) {
-    showToast('âŒ No PDF URL or ID found');
+    showToast('âŒ No PDF URL or ID found');
     state.isSending = false;
     return;
   }
 
-  showToast('â³ Sending to Telegram chat...');
+  showToast('â³ Sending to Telegram chat...');
 
   const teacher = state.subject?.teacherIds?.[0];
   let faculty = teacher ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() : '';
@@ -2348,15 +2345,15 @@ async function sendContent(keyOrItem, type) {
     }
   } catch (err) {
     console.warn('Bot send failed:', err.message);
-    showToast('âŒ Failed to send. Please try again.');
+    showToast('âŒ Failed to send. Please try again.');
   } finally {
     state.isSending = false;
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // ACTION SELECTION SHEET & IN-APP VIDEO PLAYER
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 let selectedActionItem = null;
 
@@ -2520,8 +2517,8 @@ function initPlayerControls() {
   videoEl.addEventListener('progress', updateScrubber);
 
   videoEl.addEventListener('play', () => {
-    if (playPauseBtn) playPauseBtn.innerHTML = 'âšâš';
-    if (centerIcon) centerIcon.innerHTML = 'âšâš';
+    if (playPauseBtn) playPauseBtn.innerHTML = 'âšâš';
+    if (centerIcon) centerIcon.innerHTML = 'âšâš';
     if (centerOverlay) centerOverlay.classList.add('playing');
     resetControlsTimeout();
   });
@@ -2615,7 +2612,7 @@ function skipVideo(delta) {
   haptic('light');
   const target = Math.max(0, Math.min(videoEl.duration || 0, videoEl.currentTime + delta));
   videoEl.currentTime = target;
-  showToast(delta > 0 ? `â© +${delta}s` : `âª ${delta}s`);
+  showToast(delta > 0 ? `â© +${delta}s` : `âª ${delta}s`);
   resetControlsTimeout();
 }
 
@@ -2656,7 +2653,7 @@ function renderQualityOptions() {
     html += `
       <button class="quality-item ${isAuto ? 'active' : ''}" onclick="setQualityLevel(-1, 'Auto')">
         <span>⚡ Auto (Best)</span>
-        ${isAuto ? '<span class="quality-check">âœ“</span>' : ''}
+        ${isAuto ? '<span class="quality-check">✓</span>' : ''}
       </button>
     `;
     levels.forEach((lvl, idx) => {
@@ -2665,7 +2662,7 @@ function renderQualityOptions() {
       html += `
         <button class="quality-item ${isAct ? 'active' : ''}" onclick="setQualityLevel(${idx}, '${res}')">
           <span>ðŸ“º ${res}</span>
-          ${isAct ? '<span class="quality-check">âœ“</span>' : ''}
+          ${isAct ? '<span class="quality-check">✓</span>' : ''}
         </button>
       `;
     });
@@ -2675,7 +2672,7 @@ function renderQualityOptions() {
       <div class="quality-menu-header">Select Video Quality</div>
       <button class="quality-item active" onclick="setQualityLevel(-1, 'Auto')">
         <span>⚡ Auto (Default)</span>
-        <span class="quality-check">âœ“</span>
+        <span class="quality-check">✓</span>
       </button>
     `;
     if (label) label.textContent = 'Auto';
@@ -2770,9 +2767,9 @@ function closeRangeXPlayer(e) {
   InvalidPlayer.close();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // BOT CONFIRMATION POPUP BOTTOM SHEET
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 function openPopup() {
   const overlay = document.getElementById('popup-overlay');
@@ -2812,9 +2809,9 @@ function openBotLink(url) {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // FAVOURITES MANAGEMENT
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 function toggleFavourite(batchId, batchData = null) {
   haptic('light');
@@ -2847,12 +2844,12 @@ function toggleFavourite(batchId, batchData = null) {
 
   // Update heart on batch card
   const heartEl = document.getElementById(`heart-${batchId}`);
-  if (heartEl) heartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
+  if (heartEl) heartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
 
   // Update heart on batch view hero
   const batchHeartEl = document.getElementById('batch-view-heart');
   if (batchHeartEl && state.batch && state.batch._id === batchId) {
-    batchHeartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
+    batchHeartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
   }
 
   updateBatchCounts();
@@ -2867,9 +2864,9 @@ function renderFavourites() {
     if (grid) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-state-icon">â¤ï¸</div>
+          <div class="empty-state-icon">â¤ï¸</div>
           <div class="empty-state-title">No Favourites Saved</div>
-          <div class="empty-state-sub">Tap ðŸ¤ on any batch to pin it here for fast 1-tap access</div>
+          <div class="empty-state-sub">Tap ðŸ¤ on any batch to pin it here for fast 1-tap access</div>
         </div>`;
     }
   } else if (grid) {
@@ -2897,9 +2894,9 @@ function switchHomeTab(tab) {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // FEATURE 1: DYNAMIC THEMES & SKINS ENGINE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 const THEME_STORAGE_KEY = 'studyhub_theme';
 const THEME_META_COLORS = {
   violet: '#08080a',
@@ -2967,9 +2964,9 @@ function closeThemeModalOnBackdrop(e) {
   if (e.target.id === 'modal-theme-picker') closeThemeModal();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // FEATURE 2: PWA INSTALLATION ENGINE (STANDALONE ANDROID APP)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 let deferredPwaPrompt = null;
 
 function initPWA() {
@@ -3055,7 +3052,7 @@ function openInChromeBrowser() {
   } else {
     window.open(targetUrl, '_blank');
   }
-  showToast('ðŸŒ Opening in Chrome... tap (â‹®) -> "Install App"');
+  showToast('ðŸŒ Opening in Chrome... tap (â‹®) -> "Install App"');
 }
 
 async function handleInstallAction() {
@@ -3064,7 +3061,7 @@ async function handleInstallAction() {
       deferredPwaPrompt.prompt();
       const choice = await deferredPwaPrompt.userChoice;
       if (choice.outcome === 'accepted') {
-        showToast('â³ Installing \ App...');
+        showToast('â³ Installing \ App...');
       }
       deferredPwaPrompt = null;
       closeInstallModal();
@@ -3080,9 +3077,9 @@ async function triggerNativeInstallPrompt() {
   handleInstallAction();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // FEATURE 3: VIP REFERRAL & INVITE SYSTEM
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 let userReferralData = {
   is_vip: false,
   referrals: 0,
@@ -3154,7 +3151,7 @@ function copyReferralLink() {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(link).then(() => {
       haptic('success');
-      showToast('ðŸ“‹ Unique Invite Link Copied!');
+      showToast('📋 Unique Invite Link Copied!');
     }).catch(() => {
       fallbackCopy(link);
     });
@@ -3173,9 +3170,9 @@ function fallbackCopy(text) {
   try {
     document.execCommand('copy');
     haptic('success');
-    showToast('ðŸ“‹ Unique Invite Link Copied!');
+    showToast('📋 Unique Invite Link Copied!');
   } catch (e) {
-    showToast('⚠️ï¸ Could not auto-copy. Please select and copy link manually.');
+    showToast('⚠️ï¸ Could not auto-copy. Please select and copy link manually.');
   }
   document.body.removeChild(ta);
 }
@@ -3192,9 +3189,9 @@ function shareReferralTelegram() {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // FEATURE 4: GURU AI DOUBT SOLVER ENGINE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 let guruAttachedPhotoBase64 = null;
 
 function handleGuruPhotoSelected(event) {
@@ -3294,7 +3291,7 @@ async function askGuruAI() {
 
   if (!text && !guruAttachedPhotoBase64) {
     haptic('warning');
-    showToast('⚠️ï¸ Please enter a question or upload a photo!');
+    showToast('⚠️ï¸ Please enter a question or upload a photo!');
     inputEl?.focus();
     return;
   }
@@ -3305,7 +3302,7 @@ async function askGuruAI() {
   const loadingText = document.getElementById('guru-loading-text');
   const loadingSubtext = document.getElementById('guru-loading-subtext');
 
-  if (loadingText) loadingText.textContent = 'ðŸ” Reading & scanning question text...';
+  if (loadingText) loadingText.textContent = 'ðŸ” Reading & scanning question text...';
   if (loadingSubtext) loadingSubtext.textContent = 'Analyzing syntax, intent & extracting core concepts...';
 
   loadingCard?.classList.remove('hidden');
@@ -3324,7 +3321,7 @@ async function askGuruAI() {
   }, 750);
 
   const timer2 = setTimeout(() => {
-    if (loadingText) loadingText.textContent = 'âœï¸ Formulating step-by-step verified solution...';
+    if (loadingText) loadingText.textContent = 'âœï¸ Formulating step-by-step verified solution...';
     if (loadingSubtext) loadingSubtext.textContent = 'Finalizing derivations, key formulas & exam takeaways...';
   }, 1600);
 
@@ -3399,7 +3396,7 @@ async function askGuruAI() {
       haptic('success');
     } else {
       haptic('error');
-      showToast(data.message || '⚠️ï¸ Guru could not solve this problem. Please retry!');
+      showToast(data.message || '⚠️ï¸ Guru could not solve this problem. Please retry!');
     }
   } catch (err) {
     console.error('Guru AI solver error:', err);
@@ -3413,9 +3410,9 @@ async function askGuruAI() {
   }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // INITIALIZATION
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 
 // Immediate bootstrap
 initTelegram();

@@ -277,7 +277,7 @@ async function initDatabase() {
         rawIndex.forEach(item => {
           if (item && item.key) lectureIndex.set(item.key, item);
         });
-        console.log(`ðŸ“ [Local Index] Restored ${lectureIndex.size} lectures/notes from disk.`);
+        console.log(`ðŸ“ [Local Index] Restored ${lectureIndex.size} lectures/notes from disk.`);
       }
     }
   } catch (e) {
@@ -292,7 +292,7 @@ async function initDatabase() {
         rawPdf.forEach(item => {
           if (item && item.key) pdfIndex.set(item.key, item);
         });
-        console.log(`ðŸ“ [PDF Index] Restored ${pdfIndex.size} PDF URLs from disk.`);
+        console.log(`ðŸ“ [PDF Index] Restored ${pdfIndex.size} PDF URLs from disk.`);
       }
     }
   } catch (e) {
@@ -306,14 +306,14 @@ async function initDatabase() {
         knownUsers.set(String(u.user_id), u);
         if (u.is_banned) bannedUsers.add(String(u.user_id));
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${users.length} users from Cloud DB.`);
+      console.log(`â˜ï¸ [Supabase] Restored ${users.length} users from Cloud DB.`);
     }
 
     const stats = await supabaseRequest('bot_stats?id=eq.global&select=*');
     if (Array.isArray(stats) && stats.length > 0) {
       globalStats.total_file_requests = stats[0].total_file_requests || globalStats.total_file_requests;
       globalStats.total_broadcasts = stats[0].total_broadcasts || globalStats.total_broadcasts;
-      console.log(`â˜ï¸ [Supabase] Restored stats: ${globalStats.total_file_requests} total requests.`);
+      console.log(`â˜ï¸ [Supabase] Restored stats: ${globalStats.total_file_requests} total requests.`);
     }
 
     // Sync lecture_index from Supabase
@@ -322,7 +322,7 @@ async function initDatabase() {
       lectures.forEach(l => {
         if (l && l.key) lectureIndex.set(l.key, l);
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${lectures.length} indexed lectures from Cloud DB (Total RAM Index: ${lectureIndex.size}).`);
+      console.log(`â˜ï¸ [Supabase] Restored ${lectures.length} indexed lectures from Cloud DB (Total RAM Index: ${lectureIndex.size}).`);
     }
 
     // Sync pdf_index from Supabase
@@ -331,7 +331,7 @@ async function initDatabase() {
       pdfs.forEach(p => {
         if (p && p.key) pdfIndex.set(p.key, p);
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${pdfs.length} PDF URLs from Cloud DB (Total RAM Index: ${pdfIndex.size}).`);
+      console.log(`â˜ï¸ [Supabase] Restored ${pdfs.length} PDF URLs from Cloud DB (Total RAM Index: ${pdfIndex.size}).`);
     }
   } catch (e) {
     console.warn('[Supabase] Initial sync skipped:', e.message);
@@ -749,7 +749,10 @@ async function learnxpwPost(path, body) {
 
 
 // ════════════════════════════════════════════════════════════════
-// MULTI-PROVIDER CONFIGURATION & HELPERS
+// MULTI-PROVIDER CONFIGURATION & HANDSHAKE HELPERS
+// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// MULTI-PROVIDER CONFIGURATION & HANDSHAKE HELPERS
 // ════════════════════════════════════════════════════════════════
 const AS_PROVIDERS = {
   nexttopper: 'nt',
@@ -759,25 +762,175 @@ const AS_PROVIDERS = {
   sketchbook: 'sketchbook',
 };
 
+let asDeviceId = 'WEB_' + crypto.randomBytes(6).toString('hex').toUpperCase();
+const asInitializedSessions = new Map(); // prov -> Set(deviceIds)
+const asTopicsCache = new Map();         // key -> { exp, data }
+const asContentCache = new Map();        // key -> { exp, data }
+const asDetailsCache = new Map();        // key -> { exp, data }
+
+function getAsMultiverseHeaders(devId = null) {
+  const dev = devId || asDeviceId;
+  const ts = Math.floor(Date.now() / 1000).toString();
+  const encodedTs = Buffer.from(ts).toString('base64');
+  const secretKey = process.env.MADX_SECRET_KEY || '1mBD4OQnsBMBaN6oISWwTmryX1lHjkW9XLZhsirCOT0=';
+  const signature = crypto.createHmac('sha256', Buffer.from(secretKey, 'base64'))
+    .update(ts)
+    .digest('base64');
+
+  return {
+    'X-Client-Id': dev,
+    'MadX-Auth-Key': encodedTs,
+    'MadX-Auth-Signature': signature,
+    'accept': '*/*',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+  };
+}
+
 async function asmultiverseGet(provider, path) {
   const prov = AS_PROVIDERS[provider.toLowerCase()] || provider;
-  const urls = [
-    `https://api.asmultiverse.app/api/v1/${prov}${path}`,
-    `https://core.asmultiverse.app/api/v1/${prov}${path}`
-  ];
-  let lastErr;
-  for (const url of urls) {
+  
+  if (!asInitializedSessions.has(prov)) {
+    asInitializedSessions.set(prov, new Set());
+  }
+  const initSet = asInitializedSessions.get(prov);
+
+  // Perform device handshake on /batches before sub-resource calls if needed
+  if (!initSet.has(asDeviceId) && !path.includes('/batches')) {
     try {
-      const headers = getMadxHeaders();
-      const res = await fetch(url, { headers });
-      if (res.ok) {
-        return await res.json();
+      const h = getAsMultiverseHeaders(asDeviceId);
+      const r = await fetch(`https://api.asmultiverse.app/api/v1/${prov}/batches?page=1`, { headers: h });
+      if (r.ok) {
+        initSet.add(asDeviceId);
       }
     } catch (e) {
-      lastErr = e;
+      console.warn(`[AS Handshake Warning] ${prov}:`, e.message);
     }
   }
-  throw lastErr || new Error(`Failed to fetch from AS Multiverse for ${provider}`);
+
+  const url = `https://api.asmultiverse.app/api/v1/${prov}${path}`;
+  const headers = getAsMultiverseHeaders(asDeviceId);
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`AS Multiverse API ${res.status}: ${text.slice(0, 120)}`);
+  }
+  if (path.includes('/batches')) {
+    initSet.add(asDeviceId);
+  }
+  return await res.json();
+}
+
+// ════════════════════════════════════════════════════════════════
+// AS MULTIVERSE CHAPTER EXTRACTION & TOPIC CLUSTERING
+// (Ported directly from 1st commit bot.py algorithms)
+// ════════════════════════════════════════════════════════════════
+function cleanChapterPrefix(s) {
+  s = String(s || '').trim();
+  const prefixes = ['Video > ', 'PDF > ', 'VIDEO > ', 'DPP > ', 'Hand Written Notes > ', 'Dpp > '];
+  for (const pfx of prefixes) {
+    if (s.startsWith(pfx)) {
+      s = s.slice(pfx.length).trim();
+    }
+  }
+  return s;
+}
+
+function normChapterKey(s) {
+  let k = cleanChapterPrefix(s);
+  k = k.toLowerCase().replace(/[^a-zA-Z0-9\u0900-\u097F]+/g, ' ').trim();
+  const words = k.split(/\s+/).filter(Boolean);
+  const normWords = [];
+  for (const w of words) {
+    if (w.endsWith('s') && !['ss', 'us', 'is', 'as', 'tenses'].some(e => w.endsWith(e))) {
+      normWords.push(w.slice(0, -1));
+    } else {
+      normWords.push(w);
+    }
+  }
+  return normWords.join(' ');
+}
+
+function extractChapterAndLecture(rawTitle, knownChapters = []) {
+  const s = cleanChapterPrefix(rawTitle);
+
+  // 1. Delimiter ' > '
+  if (s.includes(' > ')) {
+    const parts = s.split(' > ').map(p => p.trim()).filter(Boolean);
+    if (parts.length === 1) return { ch: parts[0], lec: parts[0] };
+    if (parts.length === 2) return { ch: parts[0], lec: parts[1] };
+    if (parts.length >= 3) {
+      const skipSubfolders = new Set([
+        'summary lectures', 'summary lecture', 'handwritten notes',
+        'hand written notes', 'notes', 'dpp', 'revision', 'ncert solutions'
+      ]);
+      if (skipSubfolders.has(parts[parts.length - 2].toLowerCase())) {
+        const ch = parts.length >= 4 ? parts[parts.length - 3] : parts[0];
+        const lec = `${parts[parts.length - 2]} - ${parts[parts.length - 1]}`;
+        return { ch, lec };
+      }
+      return { ch: parts[1], lec: parts[parts.length - 1] };
+    }
+  }
+
+  // 2. Delimiter ' | '
+  if (s.includes(' | ')) {
+    const parts = s.split(' | ');
+    return { ch: parts[0].trim(), lec: parts.slice(1).join(' | ').trim() };
+  }
+
+  // 3. Delimiter ' - '
+  const m = s.match(/^(Chapter\s+\d+\s*-\s*[^-]+)\s*-\s*(.+)$/i);
+  if (m) return { ch: m[1].trim(), lec: m[2].trim() };
+
+  if (s.includes(' - ')) {
+    const parts = s.split(' - ');
+    return { ch: parts[0].trim(), lec: parts.slice(1).join(' - ').trim() };
+  }
+
+  // 4. Check known chapters
+  if (Array.isArray(knownChapters) && knownChapters.length > 0) {
+    const sortedKnown = [...knownChapters].sort((a, b) => b.length - a.length);
+    for (const k of sortedKnown) {
+      if (k && (s.startsWith(k) || s.toLowerCase().includes(k.toLowerCase()))) {
+        const rest = s.slice(k.length).replace(/^[\s\-|:>]+/, '').trim();
+        return { ch: k, lec: rest || s };
+      }
+    }
+  }
+
+  return { ch: s, lec: s };
+}
+
+function isDppPdfItem(rawTitle) {
+  const t = String(rawTitle || '').toLowerCase();
+  if (['class pdf', 'class notes', 'lecture notes', 'theory notes', 'lecture pdf'].some(k => t.includes(k))) {
+    return false;
+  }
+  const dppPatterns = [
+    /\bdpp\b/, /\bd\.p\.p\b/, /\bassignment\b/, /\bpractice sheet\b/,
+    /\bpractice-sheet\b/, /\bworksheet\b/, /\bquestion paper\b/,
+    /\btest paper\b/, /\bhomework\b/, /\bh\.w\b/, /\bh\/w\b/,
+    /\bquestion practice\b/, /\bdaily practice\b/, /\bexercise\b/
+  ];
+  return dppPatterns.some(p => p.test(t));
+}
+
+function isDppVideoItem(rawTitle) {
+  const t = String(rawTitle || '').toLowerCase();
+  const dppPatterns = [
+    /\bdpp\b/, /\bd\.p\.p\b/, /\bdiscussion\b/, /\bsolution\b/,
+    /\bexercise solution\b/, /\bncert solution\b/, /\btest solution\b/,
+    /\bhomework discussion\b/, /\bquestion practice\b/, /\bdpp solution\b/,
+    /\bproblem discussion\b/
+  ];
+  return dppPatterns.some(p => p.test(t));
+}
+
+function lectureSortKey(item) {
+  const name = item.name || '';
+  const m = name.match(/\b(?:L|Lecture|Class|Part)[-\s]*0*(\d+)\b/i);
+  if (m) return parseInt(m[1], 10);
+  return 9999;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -794,99 +947,99 @@ app.get('/api/batches', async (req, res) => {
       const raw = (data.data && Array.isArray(data.data)) ? data.data : (data.data?.batches || []);
       const normalized = raw.map(b => {
         const bId = String(b._id || b.id || '');
-        const title = b.title || b.name || b.batchName || 'Batch';
-        let img = b.previewImage || b.image || '';
-        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
-          img = getBannerUrl();
-        }
+        const name = b.name || b.title || 'Course Batch';
+        const img = b.image || b.previewImage || getBannerUrl();
         return {
           _id: bId,
           id: bId,
-          name: title,
-          title: title,
-          previewImage: img,
+          name: name,
+          title: name,
+          slug: b.slug || bId,
+          description: b.description || name,
           image: img,
-          class: b.class || ''
+          previewImage: { baseUrl: img, key: '' },
+          isFree: true,
+          price: 0,
+          fee: 0,
+          rating: '4.9',
+          language: b.language || 'Hinglish',
+          class: b.class || 'All',
+          topicsCount: b.totalTopics || 10
         };
       });
       return res.json({ success: true, data: normalized });
     }
 
-    // 2. Physics Wallah (PW) Provider with safe default userId
-    const userId = process.env.PW_USER_ID || '6a429c85c07e44cc78e146e7';
-    const response = await madxGet(`/mybatches/${userId}/details?page=${page}&limit=${limit}`);
-    
-    // Sort with Arjuna JEE 2.0 2027 #1, followed by 2027 batches, then by year
-    if (response.data && Array.isArray(response.data)) {
-      response.data.sort((a, b) => {
-        const nameA = (a.name || '').toLowerCase();
-        const nameB = (b.name || '').toLowerCase();
-        function getPriority(name) {
-          if (name.includes('arjuna') && name.includes('jee') && (name.includes('2.0') || name.includes('2')) && name.includes('2027')) return 1000;
-          if (name.includes('arjuna') && name.includes('jee') && (name.includes('2.0') || name.includes('2'))) return 900;
-          if (name.includes('arjuna') && name.includes('jee') && name.includes('2027')) return 850;
-          if (name.includes('2027')) return 800;
-          if (name.includes('2026')) return 700;
-          if (name.includes('2025')) return 600;
-          if (name.includes('2024')) return 500;
-          return 100;
-        }
-        const pA = getPriority(nameA);
-        const pB = getPriority(nameB);
-        if (pA !== pB) return pB - pA;
-        return nameA.localeCompare(nameB);
-      });
+    // 2. PW Provider
+    try {
+      const data = await learnxpwGet(`/all-batches?page=${page}&limit=${limit}`);
+      if (data && (Array.isArray(data.data) || Array.isArray(data))) {
+        return res.json(data);
+      }
+    } catch (err) {
+      console.warn('[LearnXPW batches failed, trying pimaxer fallback]:', err.message);
     }
-    res.json(response);
+
+    const data = await proxyGet(`/v2/batches?page=${page}&limit=${limit}`);
+    res.json(data);
   } catch (err) {
-    console.error('[Batches Error]:', err.message);
+    console.error('[Batches Route Error]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.get('/api/batches/search', async (req, res) => {
   try {
-    const { q, provider = 'pw' } = req.query;
-    if (!q) return res.status(400).json({ error: 'Missing q' });
+    const { q = '', provider = 'pw' } = req.query;
     const provKey = String(provider).toLowerCase();
 
-    // Multi-provider search
+    // 1. Non-PW Multi-Providers
     if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
       const data = await asmultiverseGet(provKey, `/batches?page=1&limit=100`);
       const raw = (data.data && Array.isArray(data.data)) ? data.data : (data.data?.batches || []);
-      const query = q.toLowerCase();
-      const matches = raw.filter(b => {
-        const title = (b.title || b.name || b.batchName || '').toLowerCase();
-        return title.includes(query);
-      }).map(b => {
+      const query = String(q).toLowerCase().trim();
+      const filtered = query
+        ? raw.filter(b => (b.name || b.title || '').toLowerCase().includes(query))
+        : raw;
+      const normalized = filtered.map(b => {
         const bId = String(b._id || b.id || '');
-        const title = b.title || b.name || b.batchName || 'Batch';
-        let img = b.previewImage || b.image || '';
-        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
-          img = getBannerUrl();
-        }
+        const name = b.name || b.title || 'Course Batch';
+        const img = b.image || b.previewImage || getBannerUrl();
         return {
           _id: bId,
           id: bId,
-          name: title,
-          title: title,
-          previewImage: img,
+          name: name,
+          title: name,
+          slug: b.slug || bId,
+          description: b.description || name,
           image: img,
-          class: b.class || ''
+          previewImage: { baseUrl: img, key: '' },
+          isFree: true,
+          price: 0,
+          fee: 0,
+          rating: '4.9',
+          language: b.language || 'Hinglish',
+          class: b.class || 'All',
+          topicsCount: b.totalTopics || 10
         };
       });
-      return res.json({ success: true, data: matches });
+      return res.json({ success: true, data: normalized });
     }
 
-    const userId = process.env.PW_USER_ID || '6a429c85c07e44cc78e146e7';
-    const response = await madxGet(`/mybatches/${userId}/details?page=1&limit=200`);
-    if (response.data && Array.isArray(response.data)) {
-      const query = q.toLowerCase();
-      response.data = response.data.filter(b => b.name && b.name.toLowerCase().includes(query));
+    // 2. PW Provider
+    try {
+      const data = await learnxpwGet(`/search-batch?search=${encodeURIComponent(q)}`);
+      if (data && (Array.isArray(data.data) || Array.isArray(data))) {
+        return res.json(data);
+      }
+    } catch (err) {
+      console.warn('[LearnXPW search failed, trying pimaxer fallback]:', err.message);
     }
-    res.json(response);
+
+    const data = await proxyGet(`/v2/batches/search?search=${encodeURIComponent(q)}`);
+    res.json(data);
   } catch (err) {
-    console.error('[Search Error]:', err.message);
+    console.error('[Search Route Error]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -895,38 +1048,368 @@ app.get('/api/batch/:batchId/details', async (req, res) => {
   try {
     const { provider = 'pw' } = req.query;
     const provKey = String(provider).toLowerCase();
-    const batchId = req.params.batchId;
+    const { batchId } = req.params;
 
+    // 1. Non-PW Multi-Providers
     if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
       const data = await asmultiverseGet(provKey, `/batch/${batchId}/details`);
-      const subjects = (data.data?.subjects || data.data || []);
-      const normalized = (Array.isArray(subjects) ? subjects : []).map(s => {
+      const rawSubjects = data.data?.subjects || data.data?.batch?.subjects || (Array.isArray(data.data) ? data.data : []);
+      const subjects = rawSubjects.map(s => {
         const sId = String(s._id || s.id || '');
-        const title = s.title || s.subject || s.subjectName || 'Subject';
-        const vCount = s.totalVideos || s.lectureCount || 0;
-        const nCount = s.totalNotes || 0;
-        let img = s.image || s.imageId || '';
-        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
-          img = getBannerUrl();
-        }
+        const name = s.name || s.title || 'Subject';
+        const img = s.image || s.previewImage || getBannerUrl();
         return {
           _id: sId,
           id: sId,
-          subject: title,
-          title: title,
-          lectureCount: vCount,
-          totalVideos: vCount,
-          totalNotes: nCount,
-          imageId: img,
-          image: img
+          name: name,
+          title: name,
+          slug: s.slug || sId,
+          image: img,
+          previewImage: { baseUrl: img, key: '' }
         };
       });
-      return res.json({ success: true, data: { _id: batchId, subjects: normalized } });
+      return res.json({
+        success: true,
+        data: {
+          _id: batchId,
+          id: batchId,
+          name: data.data?.name || data.data?.title || 'Batch Details',
+          title: data.data?.name || data.data?.title || 'Batch Details',
+          subjects: subjects
+        }
+      });
     }
 
-    res.json(await madxGet(`/batches/${batchId}/details`));
+    // 2. PW Provider
+    try {
+      const data = await learnxpwGet(`/BatchDetails?BatchId=${encodeURIComponent(batchId)}`);
+      if (data && data.success !== false) {
+        return res.json(data);
+      }
+    } catch (err) {
+      console.warn('[LearnXPW batch details failed, trying pimaxer fallback]:', err.message);
+    }
+
+    const data = await proxyGet(`/v2/batches/${encodeURIComponent(batchId)}/details`);
+    res.json(data);
   } catch (err) {
-    console.error('[Batch Details Error]:', err.message);
+    console.error('[BatchDetails Route Error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/batch/:batchId/subject/:subjectId/topics', async (req, res) => {
+  try {
+    const { page = 1, provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    const { batchId, subjectId } = req.params;
+
+    // 1. Non-PW Multi-Providers
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const cacheKey = `${provKey}:${batchId}:${subjectId}`;
+      const now = Date.now();
+      if (asTopicsCache.has(cacheKey)) {
+        const cached = asTopicsCache.get(cacheKey);
+        if (now < cached.exp) {
+          return res.json(cached.data);
+        }
+      }
+
+      let vChapters = [];
+      let pChapters = [];
+      try {
+        const [vRes, pRes] = await Promise.allSettled([
+          asmultiverseGet(provKey, `/batch/${batchId}/subject/${subjectId}/topics?contentType=VIDEO`),
+          asmultiverseGet(provKey, `/batch/${batchId}/subject/${subjectId}/topics?contentType=PDF`)
+        ]);
+        if (vRes.status === 'fulfilled' && vRes.value?.data?.chapters) {
+          vChapters = vRes.value.data.chapters;
+        }
+        if (pRes.status === 'fulfilled' && pRes.value?.data?.chapters) {
+          pChapters = pRes.value.data.chapters;
+        }
+      } catch (e) {
+        console.warn('[AS Topics Fetch Error]:', e.message);
+      }
+
+      const allChapters = [...vChapters, ...pChapters];
+
+      // Collect known explicit chapter names
+      const knownChapters = [];
+      for (const ch of allChapters) {
+        const raw = ch.title || ch.name || '';
+        const { ch: ech } = extractChapterAndLecture(raw);
+        if (ech && ech !== cleanChapterPrefix(raw) && !knownChapters.includes(ech)) {
+          knownChapters.push(ech);
+        }
+      }
+
+      // Cluster chapters by normalized key
+      const clusters = {};
+      for (const v of vChapters) {
+        const raw = v.title || v.name || 'Chapter';
+        const { ch: chName } = extractChapterAndLecture(raw, knownChapters);
+        const key = normChapterKey(chName) || 'general';
+        if (!clusters[key]) {
+          clusters[key] = { name: chName, vCount: 0, pCount: 0, dppPCount: 0, dppVCount: 0 };
+        }
+        if (isDppVideoItem(raw)) {
+          clusters[key].dppVCount++;
+        } else {
+          clusters[key].vCount++;
+        }
+      }
+
+      for (const p of pChapters) {
+        const raw = p.title || p.name || 'Chapter';
+        const { ch: chName } = extractChapterAndLecture(raw, knownChapters);
+        const key = normChapterKey(chName) || 'general';
+        if (!clusters[key]) {
+          clusters[key] = { name: chName, vCount: 0, pCount: 0, dppPCount: 0, dppVCount: 0 };
+        }
+        if (isDppPdfItem(raw)) {
+          clusters[key].dppPCount++;
+        } else {
+          clusters[key].pCount++;
+        }
+      }
+
+      const topics = Object.entries(clusters).map(([key, data]) => {
+        const vTotal = data.vCount > 0 ? data.vCount : data.dppVCount;
+        const pTotal = data.pCount > 0 ? data.pCount : data.dppPCount;
+        return {
+          _id: key,
+          id: key,
+          name: data.name,
+          slug: key,
+          lectureVideos: vTotal,
+          notes: pTotal,
+          dppNotes: data.dppPCount,
+          dppVideos: data.dppVCount,
+          exercises: data.dppPCount
+        };
+      });
+
+      const finalTopics = topics.length ? topics : [{
+        _id: `top_${subjectId}`,
+        id: `top_${subjectId}`,
+        name: 'Course Curriculum & Lectures',
+        slug: 'curriculum',
+        lectureVideos: vChapters.length || 1,
+        notes: pChapters.length || 1,
+        dppNotes: 0,
+        dppVideos: 0,
+        exercises: 0
+      }];
+
+      const respPayload = { success: true, data: finalTopics };
+      if (topics.length) {
+        asTopicsCache.set(cacheKey, { exp: now + 7200000, data: respPayload });
+      }
+      return res.json(respPayload);
+    }
+
+    // 2. PW Provider
+    try {
+      const data = await learnxpwGet(
+        `/SubjectInfo?BatchId=${encodeURIComponent(batchId)}&SubjectId=${encodeURIComponent(subjectId)}&page=${page}`
+      );
+      if (data && data.success !== false) {
+        return res.json(data);
+      }
+    } catch (err) {
+      console.warn('[LearnXPW topics failed, trying pimaxer fallback]:', err.message);
+    }
+
+    const data = await proxyGet(`/v2/batches/${encodeURIComponent(batchId)}/subject/${encodeURIComponent(subjectId)}/topics`);
+    res.json(data);
+  } catch (err) {
+    console.error('[Topics Route Error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper for AS Multiverse Content
+async function getAsMultiverseContent(provKey, batchId, subjectId, tag, contentType, page) {
+  const isPdfReq = ['notes', 'dppnotes'].includes(contentType.toLowerCase());
+  const cType = isPdfReq ? 'PDF' : 'VIDEO';
+  const cacheKey = `${provKey}:${batchId}:${subjectId}:${contentType.toLowerCase()}:${tag || 'all'}`;
+  const now = Date.now();
+
+  if (asContentCache.has(cacheKey)) {
+    const cached = asContentCache.get(cacheKey);
+    if (now < cached.exp) {
+      return cached.data;
+    }
+  }
+
+  const url = `/batch/${batchId}/subject/${subjectId}/topics?contentType=${cType}`;
+  const data = await asmultiverseGet(provKey, url);
+  const chapters = data.data?.chapters || (Array.isArray(data.data) ? data.data : []);
+
+  const knownChapters = [];
+  for (const ch of chapters) {
+    const raw = ch.title || ch.name || '';
+    const { ch: ech } = extractChapterAndLecture(raw);
+    if (ech && ech !== cleanChapterPrefix(raw) && !knownChapters.includes(ech)) {
+      knownChapters.push(ech);
+    }
+  }
+
+  const tagKey = tag ? normChapterKey(tag) : '';
+  let formatted = [];
+
+  for (const ch of chapters) {
+    const raw = ch.title || ch.name || '';
+    const { ch: chName, lec: lecName } = extractChapterAndLecture(raw, knownChapters);
+    const itemKey = normChapterKey(chName) || 'general';
+
+    if (tag && tag.toLowerCase() !== 'all' && tag !== `top_${subjectId}` && tag !== 'curriculum') {
+      const match = (itemKey === tagKey) ||
+                    (tagKey && itemKey.includes(tagKey)) ||
+                    (tagKey && tagKey.includes(itemKey)) ||
+                    raw.toLowerCase().includes(tag.toLowerCase()) ||
+                    String(ch._id || ch.id) === tag;
+      if (!match) continue;
+    }
+
+    const dur = ch.duration;
+    const durStr = (typeof dur === 'number' && dur > 0) ? `${Math.floor(dur / 60)} mins` : (dur ? String(dur) : '45 mins');
+    const cId = String(ch._id || ch.id || '');
+    const isPdf = (cType === 'PDF');
+    const bannerImg = getBannerUrl();
+    const displayTitle = lecName || chName || raw;
+
+    formatted.push({
+      _id: cId,
+      id: cId,
+      topic: chName || 'Chapter',
+      name: displayTitle,
+      raw_title: raw,
+      image: bannerImg,
+      previewImage: { baseUrl: bannerImg, key: '' },
+      duration: durStr,
+      date: ch.date || ch.createdAt || 0,
+      batchId: batchId,
+      contentId: cId,
+      subjectId: subjectId,
+      provider: provKey,
+      type: isPdf ? 'PDF' : 'VIDEO',
+      videoDetails: {
+        _id: cId,
+        id: cId,
+        name: displayTitle,
+        image: bannerImg,
+        duration: durStr,
+        url: ch.link || ch.url || '',
+        videoUrl: ch.link || ch.url || '',
+        embedCode: ch.link || ch.url || ''
+      },
+      url: ch.link || ch.url || '',
+      pdfUrl: isPdf ? (ch.link || ch.url || '') : '',
+      homeworkIds: isPdf ? [{
+        _id: cId,
+        topic: displayTitle,
+        attachmentIds: [{
+          _id: cId,
+          name: displayTitle,
+          baseUrl: ch.link || ch.url || '',
+          key: ''
+        }]
+      }] : []
+    });
+  }
+
+  // Sort ascending (L1, L2, L3...)
+  formatted.sort((a, b) => lectureSortKey(a) - lectureSortKey(b));
+
+  // Strict Tab Separation
+  const ctLower = contentType.toLowerCase();
+  if (ctLower === 'dppnotes') {
+    formatted = formatted.filter(it => isDppPdfItem(it.raw_title + ' ' + it.name));
+  } else if (ctLower === 'notes') {
+    const nonDpp = formatted.filter(it => !isDppPdfItem(it.raw_title + ' ' + it.name));
+    if (nonDpp.length) formatted = nonDpp;
+  } else if (ctLower === 'dppvideos') {
+    formatted = formatted.filter(it => isDppVideoItem(it.raw_title + ' ' + it.name));
+  } else if (ctLower === 'videos') {
+    const regularVids = formatted.filter(it => !isDppVideoItem(it.raw_title + ' ' + it.name));
+    if (regularVids.length) formatted = regularVids;
+  }
+
+  const respPayload = { success: true, data: formatted };
+  if (formatted.length) {
+    asContentCache.set(cacheKey, { exp: now + 7200000, data: respPayload });
+  }
+  return respPayload;
+}
+
+app.get('/api/batch/:batchId/subject/:subjectId/topic/:topicId/content', async (req, res) => {
+  try {
+    const { type = 'Videos', page = 1, provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    const { batchId, subjectId, topicId } = req.params;
+
+    // 1. Non-PW Multi-Providers
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const data = await getAsMultiverseContent(provKey, batchId, subjectId, topicId, type, page);
+      return res.json(data);
+    }
+
+    // 2. PW Provider
+    const typeMap = { videos: 'videos', notes: 'notes', dppnotes: 'DppNotes', dppvideos: 'DppVideos' };
+    const contentType = typeMap[type.toLowerCase()] || type;
+    try {
+      const data = await learnxpwGet(
+        `/TopicInfo?BatchId=${encodeURIComponent(batchId)}&SubjectId=${encodeURIComponent(subjectId)}&TopicId=${encodeURIComponent(topicId)}&ContentType=${contentType}&page=${page}`
+      );
+      if (data && data.success !== false) {
+        return res.json(data);
+      }
+    } catch (err) {
+      console.warn('[LearnXPW topic content failed, trying pimaxer fallback]:', err.message);
+    }
+
+    const data = await proxyGet(`/v2/batches/${encodeURIComponent(batchId)}/subject/${encodeURIComponent(subjectId)}/content?page=${page}&limit=500&contentType=${contentType}&tag=${encodeURIComponent(topicId)}`);
+    res.json(data);
+  } catch (err) {
+    console.error('[TopicContent Route Error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/batch/:batchId/subject/:subjectId/content', async (req, res) => {
+  try {
+    const { type = 'Videos', tag = '', page = 1, provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    const { batchId, subjectId } = req.params;
+
+    // 1. Non-PW Multi-Providers
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const data = await getAsMultiverseContent(provKey, batchId, subjectId, tag, type, page);
+      return res.json(data);
+    }
+
+    // 2. PW Provider
+    const typeMap = { videos: 'videos', notes: 'notes', dppnotes: 'DppNotes', dppvideos: 'DppVideos' };
+    const contentType = typeMap[type.toLowerCase()] || type;
+    if (tag) {
+      try {
+        const data = await learnxpwGet(
+          `/TopicInfo?BatchId=${encodeURIComponent(batchId)}&SubjectId=${encodeURIComponent(subjectId)}&TopicId=${encodeURIComponent(tag)}&ContentType=${contentType}&page=${page}`
+        );
+        if (data && data.success !== false) {
+          return res.json(data);
+        }
+      } catch (err) {
+        console.warn('[LearnXPW content tag failed, trying pimaxer fallback]:', err.message);
+      }
+    }
+
+    const data = await proxyGet(`/v2/batches/${encodeURIComponent(batchId)}/subject/${encodeURIComponent(subjectId)}/content?page=${page}&limit=500&contentType=${contentType}&tag=${encodeURIComponent(tag)}`);
+    res.json(data);
+  } catch (err) {
+    console.error('[Content Route Error]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -938,12 +1421,38 @@ app.get('/api/batch/:batchId/subject/:subjectId/content/:contentId/details', asy
     const { batchId, subjectId, contentId } = req.params;
 
     if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const cacheKey = `${provKey}:${batchId}:${subjectId}:${contentId}`;
+      const now = Date.now();
+      if (asDetailsCache.has(cacheKey)) {
+        const cached = asDetailsCache.get(cacheKey);
+        if (now < cached.exp) {
+          return res.json(cached.data);
+        }
+      }
+
       try {
-        const data = await asmultiverseGet(provKey, `/batches/${batchId}/subjects/${subjectId}/contents/${contentId}/details`);
-        return res.json(data);
-      } catch (e) {
         const data = await asmultiverseGet(provKey, `/batch/${batchId}/subject/${subjectId}/content/${contentId}/details`);
-        return res.json(data);
+        if (data && data.success) {
+          asDetailsCache.set(cacheKey, { exp: now + 7200000, data });
+          return res.json(data);
+        }
+      } catch (e) {
+        try {
+          const data = await asmultiverseGet(provKey, `/batches/${batchId}/subjects/${subjectId}/contents/${contentId}/details`);
+          if (data && data.success) {
+            asDetailsCache.set(cacheKey, { exp: now + 7200000, data });
+            return res.json(data);
+          }
+        } catch (e2) {
+          const vData = await asmultiverseGet(provKey, `/batch/${batchId}/subject/${subjectId}/topics?contentType=VIDEO`).catch(() => ({}));
+          const chapters = vData.data?.chapters || [];
+          const match = chapters.find(c => String(c._id || c.id) === String(contentId));
+          if (match && match.link) {
+            const resp = { success: true, data: { link: match.link, title: match.title, url: match.link } };
+            asDetailsCache.set(cacheKey, { exp: now + 7200000, data: resp });
+            return res.json(resp);
+          }
+        }
       }
     }
 
@@ -954,42 +1463,15 @@ app.get('/api/batch/:batchId/subject/:subjectId/content/:contentId/details', asy
   }
 });
 
-app.get('/api/batch/:batchId/subject/:subjectId/topics', async (req, res) => {
-  try {
-    const { page = 1 } = req.query;
-    const data = await learnxpwGet(
-      `/SubjectInfo?BatchId=${encodeURIComponent(req.params.batchId)}&SubjectId=${encodeURIComponent(req.params.subjectId)}&page=${page}`
-    );
-    res.json(data);
-  } catch (err) {
-    console.error('[Topics Route Error]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Content per topic — learnxpw.site /api/TopicInfo
-// type: Videos | notes | DppNotes | DppVideos  |  page: 1,2,3...
-// Empty page returns {data:[]} — frontend stops Load More
-app.get('/api/batch/:batchId/subject/:subjectId/topic/:topicId/content', async (req, res) => {
-  try {
-    const { type = 'Videos', page = 1 } = req.query;
-    // Normalize ContentType casing for learnxpw API
-    const typeMap = { videos: 'videos', notes: 'notes', dppnotes: 'DppNotes', dppvideos: 'DppVideos' };
-    const contentType = typeMap[type.toLowerCase()] || type;
-    const data = await learnxpwGet(
-      `/TopicInfo?BatchId=${encodeURIComponent(req.params.batchId)}&SubjectId=${encodeURIComponent(req.params.subjectId)}&TopicId=${encodeURIComponent(req.params.topicId)}&ContentType=${contentType}&page=${page}`
-    );
-    res.json(data);
-  } catch (err) {
-    console.error('[TopicContent Route Error]', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Schedule/Attachments for a lecture (Notes, DPP attached to a video)
 // Used by Telegram bot quality section
 app.get('/api/batch/:batchId/subject/:subjectId/content/:contentId/schedule', async (req, res) => {
   try {
+    const { provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      return res.json({ success: true, data: [] });
+    }
     const data = await learnxpwGet(
       `/Schedule?BatchId=${encodeURIComponent(req.params.batchId)}&SubjectId=${encodeURIComponent(req.params.subjectId)}&ContentId=${encodeURIComponent(req.params.contentId)}`
     );
@@ -1009,7 +1491,6 @@ app.get('/api/getpdf', async (req, res) => {
     const data = await learnxpwGet(
       `/GetPdf?BatchId=${encodeURIComponent(batchId)}&SubjectId=${encodeURIComponent(subjectId)}&PdfId=${encodeURIComponent(pdfId)}&AttachmentId=${encodeURIComponent(attachmentId)}`
     );
-    // Construct full PDF URL
     if (data?.success && data?.data) {
       data.data.pdfUrl = (data.data.baseUrl || '') + (data.data.key || '');
     }
@@ -1031,31 +1512,8 @@ app.get('/api/teacher/:teacherId', async (req, res) => {
   }
 });
 
-// Legacy pimaxer content route — kept for non-PW providers (nexttopper, missionjeet etc.)
-app.get('/api/batch/:batchId/subject/:subjectSlug/content', async (req, res) => {
-  try {
-    const { type = 'Videos', tag, page = 1 } = req.query;
-    if (!tag) return res.status(400).json({ error: 'Missing tag' });
-    const batchId = encodeURIComponent(req.params.batchId);
-    const subjectSlug = encodeURIComponent(req.params.subjectSlug);
-    const safeTag = encodeURIComponent(tag);
-    let contentType = type;
-    if (type.toLowerCase() === 'notes') contentType = 'notes';
-    else if (type.toLowerCase() === 'videos') contentType = 'Videos';
-    else if (type.toLowerCase() === 'dppnotes') contentType = 'DppNotes';
-    else if (type.toLowerCase() === 'dppvideos') contentType = 'DppVideos';
-    const data = await proxyGet(`/v2/batches/${batchId}/subject/${subjectSlug}/content?page=${page}&limit=500&contentType=${contentType}&tag=${safeTag}`);
-    res.json(data);
-  } catch (err) {
-    console.error(`[Legacy Content Route Error]:`, err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
 
-
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// LINK PREVIEW STORE  — ephemeral metadata for browser deep-links
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 app.post('/api/link-preview', (req, res) => {
   const { name, subject, topic, image, pdfUrl, batchId, contentId, type } = req.body || {};
   if (!batchId || !contentId) return res.status(400).json({ error: 'batchId and contentId required' });
@@ -1078,9 +1536,9 @@ app.post('/api/link-preview', (req, res) => {
   return res.json({ ok: true, lpId, startParam: `lp_${lpId}` });
 });
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // BOT: SEND CONTENT (called from Mini App)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 app.post('/bot/send', async (req, res) => {
   try {
     const { chatId, type, batchId, contentId, name, image, subject, topic,
@@ -1185,7 +1643,7 @@ async function sendVideoQualitySelection(chatId, info) {
       const q = qualities[j].replace('p', ''); 
       // Instead of direct URL, use callback to trigger Userbot
       row.push({
-        text: `${qualities[j]} ↗ï¸`,
+        text: `${qualities[j]} ↗ï¸`,
         callback_data: `v_${info.batchId}_${info.contentId}_${q}`
       });
     }
@@ -1195,12 +1653,12 @@ async function sendVideoQualitySelection(chatId, info) {
   // Attach Homework / Notes inline buttons
   const validHomeworks = (info.homeworks || []).filter(hw => (Array.isArray(hw?.attachmentIds) && hw.attachmentIds.length > 0) || hw?._id);
   if (validHomeworks.length > 0) {
-    qualityButtons.push([{ text: '⬇️ï¸ Class Notes ⬇️ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ï¸ Class Notes ⬇️ï¸', callback_data: 'noop' }]);
     validHomeworks.forEach(hw => {
       const att = (Array.isArray(hw?.attachmentIds) && hw.attachmentIds[0]) || hw || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'} ↗ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'} ↗ï¸`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || hw._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1221,12 +1679,12 @@ async function sendVideoQualitySelection(chatId, info) {
 
   const validDpps = (info.dpps || []).filter(dpp => (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds.length > 0) || dpp?._id);
   if (validDpps.length > 0) {
-    qualityButtons.push([{ text: '⬇️ï¸ DPPs ⬇️ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ï¸ DPPs ⬇️ï¸', callback_data: 'noop' }]);
     validDpps.forEach(dpp => {
       const att = (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds[0]) || dpp || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || dpp._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1240,7 +1698,7 @@ async function sendVideoQualitySelection(chatId, info) {
           });
         }
       } else {
-        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'}`, callback_data: `n_${info.batchId}_${att._id || dpp._id}` }]);
+        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'}`, callback_data: `n_${info.batchId}_${att._id || dpp._id}` }]);
       }
     });
   }
@@ -1263,7 +1721,7 @@ async function sendVideoQualitySelection(chatId, info) {
 // ─── Send PDF/Notes Direct ────────────────────────────────────
 async function sendPdfDirect(chatId, info) {
   const isDpp    = info.type === 'DppNotes';
-  const emoji    = isDpp ? 'ðŸ“' : '📄';
+  const emoji    = isDpp ? 'ðŸ“' : '📄';
   const label    = isDpp ? 'DPP PDF' : 'Class Notes';
   const caption  = getCaption(false, info);
 
@@ -1280,7 +1738,7 @@ async function sendPdfDirect(chatId, info) {
     console.log(`[sendPdfDirect] Sending PDF as URL button: ${pdfUrl}`);
     const replyMarkup = {
       inline_keyboard: [
-        [{ text: `${emoji} Open ${label} ↗ï¸`, url: pdfUrl }],
+        [{ text: `${emoji} Open ${label} ↗ï¸`, url: pdfUrl }],
         [{ text: 'Close 🔒', callback_data: 'close_msg' }]
       ]
     };
@@ -1309,7 +1767,7 @@ async function sendPdfDirect(chatId, info) {
   console.log(`[sendPdfDirect] Fallback button: batchId=${info.batchId} contentId=${info.contentId}`);
   const replyMarkup = {
     inline_keyboard: [
-      [{ text: `${emoji} Get ${label} ↗ï¸`, callback_data: `n_${info.batchId}_${info.contentId}` }],
+      [{ text: `${emoji} Get ${label} ↗ï¸`, callback_data: `n_${info.batchId}_${info.contentId}` }],
       [{ text: 'Close 🔒', callback_data: 'close_msg' }]
     ]
   };
@@ -1323,9 +1781,9 @@ function escMd(text) {
   return String(text).replace(/[*_`\[\]]/g, '');
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // STEALTH USERBOT FETCH QUEUE
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 const fetchQueue = [];
 let isFetching = false;
 const pendingRequests = new Map(); // requestId -> { chatId, caption, type, statusMsgId }
@@ -1347,10 +1805,10 @@ async function processFetchQueue() {
     } catch (err) {
       if (err.cooldown && attempts < 3) {
         const secs = err.waitSeconds || 5;
-        console.log(`â³ [Cooldown Detected] Source server asked to wait ${secs}s. Pausing queue and auto-retrying...`);
+        console.log(`â³ [Cooldown Detected] Source server asked to wait ${secs}s. Pausing queue and auto-retrying...`);
         const pending = pendingRequests.get(req.reqId);
         if (pending && pending.statusMsgId && bot) {
-          bot.editMessageText(`â³ *Please wait ${secs}s — auto-fetching your file...*`, {
+          bot.editMessageText(`â³ *Please wait ${secs}s — auto-fetching your file...*`, {
             chat_id: pending.chatId,
             message_id: pending.statusMsgId,
             parse_mode: 'Markdown'
@@ -1362,7 +1820,7 @@ async function processFetchQueue() {
         const pending = pendingRequests.get(req.reqId);
         if (pending) {
           if (pending.statusMsgId) bot.deleteMessage(pending.chatId, pending.statusMsgId).catch(()=>{});
-          bot.sendMessage(pending.chatId, 'âŒ *Failed to fetch file from server.*', { parse_mode: 'Markdown' });
+          bot.sendMessage(pending.chatId, 'âŒ *Failed to fetch file from server.*', { parse_mode: 'Markdown' });
           pendingRequests.delete(req.reqId);
         }
         break;
@@ -1522,17 +1980,17 @@ async function performFetch({ reqId, startParam }) {
 // ─── Admin Dashboard & Live Batch Dump Engine ─────────────────
 function getAdminDashboardText() {
   const dumpStatus = getDumpStatus();
-  return `🛡️ï¸ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
-         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+  return `🛡️ï¸ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
+         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
          `👑 *Super Admin:* \`${SUPER_ADMIN}\`\n` +
          `👥 *Admin Count:* \`${adminUsers.size}\`\n` +
          `👥 *Total Bot Users:* \`${knownUsers.size}\`\n` +
          `📥 *Total Files Sent:* \`${globalStats.total_file_requests}\`\n` +
          `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\` items\n` +
          `📦 *Primary Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-         `🛡️ï¸ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
-         `âš™ï¸ *Auto-Dumper Status:* ${dumpStatus.isRunning ? '🟡 `RUNNING`' : '🟢 `IDLE`'}\n` +
-         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+         `🛡️ï¸ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+         `âš™ï¸ *Auto-Dumper Status:* ${dumpStatus.isRunning ? '🟡 `RUNNING`' : '🟢 `IDLE`'}\n` +
+         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
          `👇 _Select an administrative action below:_`;
 }
 
@@ -1542,7 +2000,7 @@ function getAdminKeyboard() {
     inline_keyboard: [
       [
         { text: '📊 Live Analytics', callback_data: 'adm_stats' },
-        { text: dumpStatus.isRunning ? 'â³ Dump Running...' : '🚀 Start Batch Dump', callback_data: 'adm_start_dump' }
+        { text: dumpStatus.isRunning ? 'â³ Dump Running...' : '🚀 Start Batch Dump', callback_data: 'adm_start_dump' }
       ],
       [
         { text: '🛑 Stop Dump', callback_data: 'adm_stop_dump' },
@@ -1553,7 +2011,7 @@ function getAdminKeyboard() {
         { text: '🔄 Refresh Panel', callback_data: 'adm_refresh' }
       ],
       [
-        { text: 'âŒ Close Panel', callback_data: 'close_msg' }
+        { text: 'âŒ Close Panel', callback_data: 'close_msg' }
       ]
     ]
   };
@@ -1563,14 +2021,14 @@ let liveDumpJob = { isRunning: false, msgId: null, chatId: null, lastUpdate: 0 }
 
 async function triggerBatchDumpFlow(targetChatId) {
   if (getDumpStatus().isRunning || liveDumpJob.isRunning) {
-    return bot.sendMessage(targetChatId, '⚠️ï¸ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
+    return bot.sendMessage(targetChatId, '⚠️ï¸ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
   }
 
   liveDumpJob.isRunning = true;
   liveDumpJob.chatId = targetChatId;
   const statusMsg = await bot.sendMessage(
     targetChatId,
-    `🚀 *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\nâ³ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
+    `🚀 *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\nâ³ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
     { parse_mode: 'Markdown' }
   );
   liveDumpJob.msgId = statusMsg.message_id;
@@ -1582,14 +2040,14 @@ async function triggerBatchDumpFlow(targetChatId) {
     liveDumpJob.lastUpdate = now;
 
     try {
-      const waitNotice = p.isWait ? `\nâ³ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
+      const waitNotice = p.isWait ? `\nâ³ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
       const text = `🚀 *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
-                   `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                   `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                    `📚 *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
                    `ðŸ“– *Subject:* \`${escMd(p.subjectName || 'Scanning...')}\`\n` +
                    `🚩 *Chapter:* \`${escMd(p.topicName || 'Scanning...')}\`\n` +
                    `📥 *New Dumped:* \`${p.totalDumped || 0}\`\n` +
-                   `â­ï¸ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
+                   `â­ï¸ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
                    `💾 *Total Archive Size:* \`${p.totalArchiveSize || lectureIndex.size}\`\n` +
                    `📦 *Channel:* \`${DUMP_CHANNEL_ID}\`` +
                    waitNotice;
@@ -1608,23 +2066,23 @@ async function triggerBatchDumpFlow(targetChatId) {
 
     let failedDetails = '';
     if (summary.totalFailed > 0 && Array.isArray(summary.failedItems)) {
-      failedDetails = `\n\n⚠️ï¸ *Failed / Missed Items (${summary.totalFailed}):*\n` +
+      failedDetails = `\n\n⚠️ï¸ *Failed / Missed Items (${summary.totalFailed}):*\n` +
                       summary.failedItems.map((f, i) => `${i + 1}. \`${escMd(f.meta?.name || f.startParam)}\` (${f.reason || 'error'})`).join('\n');
     }
 
     const failedLine = summary.totalFailed === 0 
-      ? `âŒ *Failed / Missed:* \`0 (100% Success — Zero Errors!)\` ✅`
-      : `âŒ *Failed / Missed:* \`${summary.totalFailed}\``;
+      ? `âŒ *Failed / Missed:* \`0 (100% Success — Zero Errors!)\` ✅`
+      : `âŒ *Failed / Missed:* \`${summary.totalFailed}\``;
 
     const completionMsg = `🎉 *BATCH DUMP & ARCHIVE COMPLETED!*\n` +
-                          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                           `📥 *Total New Dumped:* \`${summary.totalDumped}\`\n` +
-                          `â­ï¸ *Already in Cache:* \`${summary.totalSkipped}\`\n` +
+                          `â­ï¸ *Already in Cache:* \`${summary.totalSkipped}\`\n` +
                           `${failedLine}\n` +
                           `📊 *Total Archive Database:* \`${summary.totalArchiveSize}\` items\n` +
-                          `â±ï¸ *Time Taken:* \`${summary.durationStr}\`\n` +
+                          `â±ï¸ *Time Taken:* \`${summary.durationStr}\`\n` +
                           `📦 *Primary Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                          `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                          `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
                           `⚡ *Status:* 100% Synced & Ready for 0.1s Fast Delivery!` +
                           failedDetails;
 
@@ -1637,7 +2095,7 @@ async function triggerBatchDumpFlow(targetChatId) {
     }
   } catch (err) {
     liveDumpJob.isRunning = false;
-    bot.sendMessage(targetChatId, `âŒ *Batch Dump Error:* ${err.message}`, { parse_mode: 'Markdown' });
+    bot.sendMessage(targetChatId, `âŒ *Batch Dump Error:* ${err.message}`, { parse_mode: 'Markdown' });
   }
 }
 
@@ -1659,9 +2117,9 @@ function removeAdminUser(userId) {
   return true;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 // TELEGRAM WEBHOOK & REGULAR BOT HANDLERS
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════
 app.post('/webhook', (req, res) => {
   try {
     if (bot) bot.processUpdate(req.body);
@@ -1729,11 +2187,11 @@ if (bot) {
 
       if (data === 'adm_storage_info') {
         const storageMsg = `📦 *Telegram Storage Channels Status*\n` +
-                           `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                           `ðŸ“ *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
-                           `🛡️ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                           `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                           `ðŸ“ *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
+                           `🛡️ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
                            `💾 *Total Indexed Files:* \`${lectureIndex.size}\` items\n` +
-                           `â˜ï¸ *Cloud Database:* \`Supabase PostgreSQL\``;
+                           `â˜ï¸ *Cloud Database:* \`Supabase PostgreSQL\``;
         return bot.sendMessage(q.message.chat.id, storageMsg, { parse_mode: 'Markdown' });
       }
 
@@ -1751,12 +2209,12 @@ if (bot) {
       await bot.answerCallbackQuery(q.id);
       
       if (!userbot) {
-        return bot.sendMessage(q.message.chat.id, "âŒ Error: Delivery system offline (Userbot not initialized).");
+        return bot.sendMessage(q.message.chat.id, "âŒ Error: Delivery system offline (Userbot not initialized).");
       }
 
       // Instead of hiding the inline keyboard, we send a new loading message
       // This preserves the original menu so the user can download other attachments!
-      const loadingMsg = await bot.sendMessage(q.message.chat.id, 'â³ *Fetching file, please wait...*', {
+      const loadingMsg = await bot.sendMessage(q.message.chat.id, 'â³ *Fetching file, please wait...*', {
         parse_mode: 'Markdown',
         reply_to_message_id: q.message.message_id
       }).catch(() => null);
@@ -1787,7 +2245,7 @@ if (bot) {
             parse_mode: 'Markdown',
             reply_markup: {
               inline_keyboard: [
-                [{ text: '📄 Open PDF ↗ï¸', url: cachedPdf.pdf_url }],
+                [{ text: '📄 Open PDF ↗ï¸', url: cachedPdf.pdf_url }],
                 [{ text: 'Close 🔒', callback_data: 'close_msg' }]
               ]
             }
@@ -1900,7 +2358,7 @@ if (bot) {
               });
               return;
             }
-            const loadingMsgN = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
+            const loadingMsgN = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
             const caption = getCaption(false, { name: lp.name, subject: lp.subject, topic: lp.topic });
             enqueueFetch(chatId, lp.contentId, caption, 'document', loadingMsgN.message_id);
             return;
@@ -1951,7 +2409,7 @@ if (bot) {
             trackFileRequest(chatId);
             return;
           }
-          const loadingMsg = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
+          const loadingMsg = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
           enqueueFetch(chatId, cleanPayload, `📄 *Direct Notes / DPP Request*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, 'document', loadingMsg.message_id);
           return;
         }
@@ -1966,7 +2424,7 @@ if (bot) {
 
         // Case C: Video with specific quality (batchId_contentId_quality) (legacy)
         const isVideo = parts.length >= 3;
-        const loadingMsg = await bot.sendMessage(chatId, isVideo ? 'â³ *Fetching your video, please wait...*' : 'â³ *Fetching file, please wait...*', { parse_mode: 'Markdown' });
+        const loadingMsg = await bot.sendMessage(chatId, isVideo ? 'â³ *Fetching your video, please wait...*' : 'â³ *Fetching file, please wait...*', { parse_mode: 'Markdown' });
         enqueueFetch(
           chatId,
           cleanPayload,
@@ -2052,7 +2510,7 @@ if (bot) {
                   }).catch(() => {
                     sendMethod(BACKUP_CHANNEL_ID, fileId, { caption: truncateCaption(dumpCaption) }).catch(() => {});
                   });
-                  console.log(`🛡️ï¸ [Mirrored to Backup Channel] Tag: ${tag}`);
+                  console.log(`🛡️ï¸ [Mirrored to Backup Channel] Tag: ${tag}`);
                 }
               })();
             }
@@ -2084,7 +2542,7 @@ if (bot) {
         if (stopped) {
           return bot.sendMessage(msg.chat.id, '🛑 *Batch Dump Cancelled.*', { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, 'ℹ️ï¸ *No active dump is currently running.*', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, 'ℹ️ï¸ *No active dump is currently running.*', { parse_mode: 'Markdown' });
         }
       }
 
@@ -2094,7 +2552,7 @@ if (bot) {
           return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can add new admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
-        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/addadmin 123456789`', { parse_mode: 'Markdown' });
+        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/addadmin 123456789`', { parse_mode: 'Markdown' });
         addAdminUser(targetId);
         return bot.sendMessage(msg.chat.id, `✅ User \`${targetId}\` is now an *Authorized Admin*!`, { parse_mode: 'Markdown' });
       }
@@ -2105,12 +2563,12 @@ if (bot) {
           return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can remove admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
-        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/removeadmin 123456789`', { parse_mode: 'Markdown' });
+        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/removeadmin 123456789`', { parse_mode: 'Markdown' });
         const res = removeAdminUser(targetId);
         if (res) {
           return bot.sendMessage(msg.chat.id, `✅ Admin \`${targetId}\` has been removed.`, { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, `âŒ Cannot remove Super Admin.`, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `âŒ Cannot remove Super Admin.`, { parse_mode: 'Markdown' });
         }
       }
 
@@ -2125,16 +2583,16 @@ if (bot) {
         const key = txt.split(' ')[1].trim();
         const cached = lectureIndex.get(key);
         if (cached) {
-          return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, `âŒ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `âŒ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
         }
       }
 
       // /br <message>
       if (txt.startsWith('/br ')) {
         const bMsg = txt.slice(4).trim();
-        if (!bMsg) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /br your message here');
+        if (!bMsg) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /br your message here');
         let ok = 0, fail = 0;
         const uids = Array.from(knownUsers.keys());
         for (const uid of uids) {
@@ -2155,13 +2613,13 @@ if (bot) {
           updated_at: new Date().toISOString()
         }, 'resolution=merge-duplicates');
 
-        return bot.sendMessage(msg.chat.id, `✅ Broadcast complete!\n\n📤 Sent: ${ok}\nâŒ Failed: ${fail}`);
+        return bot.sendMessage(msg.chat.id, `✅ Broadcast complete!\n\n📤 Sent: ${ok}\nâŒ Failed: ${fail}`);
       }
 
       // /ban <userId>
       if (txt.startsWith('/ban ')) {
         const uid = parseInt(txt.split(' ')[1]);
-        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /ban 123456789');
+        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /ban 123456789');
         setBanStatus(uid, true);
         return bot.sendMessage(msg.chat.id, `🚫 User \`${uid}\` has been banned.`);
       }
@@ -2169,7 +2627,7 @@ if (bot) {
       // /unban <userId>
       if (txt.startsWith('/unban ')) {
         const uid = parseInt(txt.split(' ')[1]);
-        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /unban 123456789');
+        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /unban 123456789');
         setBanStatus(uid, false);
         return bot.sendMessage(msg.chat.id, `✅ User \`${uid}\` has been unbanned.`);
       }
@@ -2203,17 +2661,17 @@ if (bot) {
         }
 
         const statsMsg = `📊 *${BRAND.BOT_NAME} — Live Analytics Dashboard*\n` +
-                         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                          `👥 *Total Users:* \`${totalUsers}\`\n` +
                          `🟢 *Active (Last 24h):* \`${active24h}\`\n` +
                          `📥 *Total Files Sent:* \`${totalRequests}\`\n` +
                          `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\`\n` +
                          `📦 *Storage Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                         `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                         `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
                          `🚫 *Banned Users:* \`${bannedCount}\`\n` +
                          `📢 *Broadcasts Sent:* \`${globalStats.total_broadcasts}\`\n` +
-                         `â±ï¸ *Uptime:* \`${uptimeStr}\`\n` +
-                         `â˜ï¸ *Database:* \`Supabase (Synced)\`` +
+                         `â±ï¸ *Uptime:* \`${uptimeStr}\`\n` +
+                         `â˜ï¸ *Database:* \`Supabase (Synced)\`` +
                          recentUsersText;
 
         return bot.sendMessage(msg.chat.id, statsMsg, { parse_mode: 'Markdown', disable_web_page_preview: true });
@@ -2233,7 +2691,7 @@ if (bot) {
           console.log(`[Support Group Reply] Successfully sent reply to ${targetId}`);
         } catch (e) {
           console.error('[Support Group Reply] Failed:', e.message);
-          await bot.sendMessage(SUPPORT_GID, `âŒ Failed to deliver reply: ` + e.message, { reply_to_message_id: msg.message_id });
+          await bot.sendMessage(SUPPORT_GID, `âŒ Failed to deliver reply: ` + e.message, { reply_to_message_id: msg.message_id });
         }
         return;
       }
@@ -2250,9 +2708,9 @@ if (bot) {
       const name  = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unknown';
       const header = `📩 *New Support Message*\n` +
                      `👤 *Name:* ` + escMd(name) + `\n` +
-                     `ðŸ·ï¸ *Username:* ` + uname + `\n` +
+                     `ðŸ·ï¸ *Username:* ` + uname + `\n` +
                      `🆔 *User ID:* \`` + fromId + `\`\n` +
-                     `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                     `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                      `💬 *Message:*\n`;
       try {
         await bot.sendMessage(SUPPORT_GID, header + escMd(msg.text), { parse_mode: 'Markdown', disable_web_page_preview: true });
