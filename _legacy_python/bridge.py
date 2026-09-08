@@ -13,7 +13,7 @@ except ImportError:
 
 logger = logging.getLogger('RangeXBridge')
 
-STORAGE_CHANNEL_ID = os.environ.get('BACKUP_CHANNEL_ID') or os.environ.get('STORAGE_CHANNEL_ID') or os.environ.get('DUMP_CHANNEL_ID') or ''
+STORAGE_CHANNEL_ID = os.environ.get('STORAGE_CHANNEL_ID', '')
 TARGET_BOT = 'AS_Multiverserobot'
 
 class VideoBridge:
@@ -31,7 +31,7 @@ class VideoBridge:
     async def initialize(self):
         api_id = int(os.environ.get('TG_API_ID', 0) or 0)
         api_hash = os.environ.get('TG_API_HASH', '')
-        session_str = os.environ.get('SESSION_STRING') or os.environ.get('TELETHON_SESSION', '')
+        session_str = os.environ.get('TELETHON_SESSION', '')
 
         if not api_id or not api_hash or not session_str:
             logger.info("Telethon credentials not fully provided in env. Bridge running in passive mode.")

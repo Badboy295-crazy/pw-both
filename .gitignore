@@ -1,6 +1,38 @@
-.env
+# ── Node.js ──
+server/node_modules/
+server/.env
+server/lecture_index.json
+server/pdf_index.json
+server/support_data.json
+server/*.db
+server/data/
+
+# ── Build Output (obfuscated — generated on deploy, never commit) ──
+webapp-dist/
+
+# ── Python ──
 __pycache__/
 *.pyc
-auth_temp.json
-*.session
-*.session-journal
+_legacy_python/__pycache__/
+_legacy_python/*.pyc
+_legacy_python/data/
+data/
+.env
+
+# ── Logs & Temp ──
+*.log
+network-log-*.json
+
+# ── Auth files (NEVER commit root session dumps) ──
+/session_dump.json
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Old root-level files (now moved to webapp/ or _legacy_python/) ──
+# These are kept in repo root as archives — gitignored to avoid confusion
+asmultiverse.js
+vendor-core.js
+vendor-media.js
+vendor-react.js

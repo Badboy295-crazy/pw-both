@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: studyhub-bot
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      # ── Set all of these in Render Dashboard (Secrets) ──
+      # BOT_TOKEN, WEBAPP_URL, BOT_NAME, BOT_USERNAME, WEBAPP_TITLE
+      # WEBAPP_TAGLINE, BOT_LINK, GROUP_LINK, POWERED_BY, POWERED_BY_HANDLE
+      # ACCENT_COLOR, SUPER_ADMIN_ID, ADMIN_ID, SUPPORT_GROUP_ID
+      # CHANNEL_ID, CHANNEL_LINK, GROUP_ID, STORAGE_CHANNEL_ID
+      # DUMP_CHANNEL_ID, BACKUP_CHANNEL_ID
+      # SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+      # SESSION_STRING, TG_API_ID, TG_API_HASH
+      # PW_USER_ID, PW_COOKIE, MADX_SECRET_KEY
+      # X_AUTH_KEY, X_CLIENT_ID, GEMINI_API_KEY
+    autoDeploy: true
+    staticPublishPath: ../webapp

@@ -10,7 +10,7 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
 DB_PATH = os.path.join(DATA_DIR, 'video_vault.db')
 
-STORAGE_CHANNEL_ID = os.environ.get('BACKUP_CHANNEL_ID') or os.environ.get('STORAGE_CHANNEL_ID') or os.environ.get('DUMP_CHANNEL_ID') or ''
+STORAGE_CHANNEL_ID = os.environ.get('STORAGE_CHANNEL_ID', '-1003948302054')
 
 
 def get_db_connection() -> sqlite3.Connection:
