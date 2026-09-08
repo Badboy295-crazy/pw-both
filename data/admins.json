@@ -1,0 +1,21 @@
+{
+  "super_admin": 7974991150,
+  "admins": {
+    "7974991150": {
+      "id": 7974991150,
+      "username": "badboy_2999",
+      "name": "Amber Kasaudhan",
+      "role": "Super Admin",
+      "added_at": "2026-09-08T00:00:00+00:00",
+      "promoted_by": "Permanent Owner"
+    },
+    "8508166126": {
+      "id": 8508166126,
+      "username": "badboy_295",
+      "name": "BAD BOY",
+      "role": "Super Admin",
+      "added_at": "2026-09-08T00:00:00+00:00",
+      "promoted_by": "Permanent Owner"
+    }
+  }
+}

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <title>RangeXCoder</title>
+  <meta name="description" content="RangeXCoder — PW Batches, Lectures, Notes & DPPs in high performance player." />
+  
+  <!-- PWA Manifest & App Metas -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#08080a" id="meta-theme-color" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RangeXCoder" />
+  
+  <!-- Video Streaming Engines (Dash.js for MPD + HLS.js for M3U8) -->
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  
+  <!-- Critical Inline CSS (Enables Native Scrolling & Prevents FOUC) -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      background: #08080a !important;
+      min-height: 100%;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    body {
+      background: #08080a !important;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100%;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      touch-action: pan-y !important;
+      -webkit-overflow-scrolling: touch !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    .app-container { max-width: 680px; margin: 0 auto; min-height: 100%; position: relative; z-index: 1; overflow: visible !important; }
+    .view { min-height: 100%; overflow: visible !important; }
+    .skeleton { background: #121318; border-radius: 8px; }
+  </style>
+
+  <!-- ─── Google Fonts (Tri-Font System: Serif + Sans + Mono) ─── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    // Immediate Telegram viewport expansion
+    if (window.Telegram && window.Telegram.WebApp) {
+      try {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.setHeaderColor('#08080a');
+        window.Telegram.WebApp.setBackgroundColor('#08080a');
+      } catch(e) {}
+    }
+  </script>
+  
+  <link rel="stylesheet" href="style.css?v=45" />
+</head>
+<body>
+  <!-- ─── SVG Grain Texture Overlay (Anti-Slop Editorial Feel) ─── -->
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <!-- ─── Ambient Glow Accents ─── -->
+  <div class="ambient-glows" aria-hidden="true">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <!-- ─── Main Application Shell ─── -->
+  <div id="app" class="app-container">
+
+    <!-- ─── Global Cyberpunk Breadcrumb Navigation Bar ─── -->
+    <nav id="global-breadcrumb-bar" class="breadcrumb-nav-bar hidden">
+      <button class="crumb-back-btn" onclick="navigateGlobalBack()" title="Previous Page">
+        <span class="crumb-back-arrow">←</span>
+        <span class="crumb-back-txt">Back</span>
+      </button>
+      <div class="crumb-trail-scroll" id="crumb-trail-scroll">
+        <!-- Rendered dynamically -->
+      </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 0: PLATFORMS SELECTION (First Page)                    -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-platforms" class="view active">
+      <header class="editorial-header">
+        <div class="header-status-row">
+          <div class="header-action-tools">
+            <button id="btn-vip-header" class="btn-header-tool vip-badge-tool hidden" onclick="openReferralModal()" title="VIP Student Status">
+              <span>👑</span> <span id="vip-badge-txt">VIP</span>
+            </button>
+            <button id="btn-referral-header" class="btn-header-tool" onclick="openReferralModal()" title="Refer & Earn VIP">
+              <span>🎁</span> <span>Invite</span>
+            </button>
+            <button id="btn-theme-switcher" class="btn-header-tool" onclick="openThemeModal()" title="Change Theme">
+              <span>🎨</span> <span>Theme</span>
+            </button>
+            <button id="btn-install-pwa" class="btn-header-tool btn-install-badge hidden" onclick="triggerPWAInstall()" title="Install as Android App">
+              <span>📲</span> <span>Install</span>
+            </button>
+            <button id="btn-open-web" class="btn-header-tool btn-web-badge" onclick="openInChromeBrowser()" title="Open on Web / Chrome Browser">
+              <span>🌐</span> <span>Open Web</span>
+            </button>
+          </div>
+          <div class="user-pill" id="user-pill-platforms">
+            <span class="user-avatar" id="user-avatar-platforms">👤</span>
+            <span class="user-name" id="user-name-platforms">Student</span>
+          </div>
+        </div>
+
+        <div class="editorial-title-block">
+          <h1 class="brand-title">
+            RangeX<span class="accent-serif">Coder</span>
+          </h1>
+          <p class="brand-subtitle">Choose your learning platform to get started</p>
+        </div>
+      </header>
+
+
+      <!-- Platforms Bento Grid -->
+      <div class="platforms-grid">
+        <!-- RangeXCoder Guru AI Doubt Solver Card -->
+        <div class="platform-card platform-card-guru" onclick="selectPlatform('guru')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">🤖</span>
+            <span class="platform-card-badge guru-badge">AI SOLVER</span>
+          </div>
+          <h3 class="platform-card-title">RangeXCoder Guru</h3>
+          <div class="platform-card-action">
+            <span>Ask Any Doubt</span>
+            <span class="platform-card-arrow">⚡</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('pw')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">🌟</span>
+            <span class="platform-card-badge">POPULAR</span>
+          </div>
+          <h3 class="platform-card-title">Physics Wallah</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('nexttopper')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">🎓</span>
+            <span class="platform-card-badge">TOPPERS</span>
+          </div>
+          <h3 class="platform-card-title">Next Toppers</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('missionjeet')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">🎯</span>
+            <span class="platform-card-badge">JEE / NEET</span>
+          </div>
+          <h3 class="platform-card-title">Mission JEET</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('vidyakul')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">📚</span>
+            <span class="platform-card-badge">STATE BOARD</span>
+          </div>
+          <h3 class="platform-card-title">Vidyakul</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('apnacollege')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">💻</span>
+            <span class="platform-card-badge">CODING / DEV</span>
+          </div>
+          <h3 class="platform-card-title">Apna College</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+
+        <div class="platform-card" onclick="selectPlatform('sketchbook')">
+          <div class="platform-card-header">
+            <span class="platform-card-emoji">🎨</span>
+            <span class="platform-card-badge">CREATIVE</span>
+          </div>
+          <h3 class="platform-card-title">SketchBook</h3>
+          <div class="platform-card-action">
+            <span>Explore Batches</span>
+            <span class="platform-card-arrow">→</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW GURU: AI DOUBT SOLVER PLATFORM                        -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-guru" class="view">
+      <div class="guru-container">
+        <div class="platform-header-nav">
+          <button class="btn-change-platform" onclick="exitGuruToPlatforms()">
+            <span class="back-icon">←</span>
+            <span>All Platforms</span>
+          </button>
+          <span class="active-platform-pill" style="border-color:#a855f7; background:rgba(168,85,247,0.18); color:#d8b4fe;">🤖 RangeXCoder Guru</span>
+        </div>
+
+        <div class="guru-hero-card">
+          <span class="guru-hero-icon">🤖</span>
+          <h2 class="guru-hero-title">RangeXCoder <span class="accent-serif" style="color:#c084fc;">Guru</span></h2>
+          <p class="guru-hero-subtitle">Your 24/7 AI Tutor for Physics, Chemistry &amp; Mathematics. Ask text questions or snap a photo of any question!</p>
+        </div>
+
+        <div class="guru-input-card">
+          <textarea id="guru-question-input" class="guru-textarea" placeholder="Type your doubt, question, or numerical problem here... (e.g., A body of mass 5kg is pulled with force 20N on a rough surface with coeff 0.2. Find acceleration.)"></textarea>
+          
+          <div id="guru-preview-container" class="guru-preview-box hidden">
+            <img id="guru-preview-image" class="guru-preview-img" alt="Question Photo" />
+            <button class="guru-remove-photo-btn" onclick="clearGuruPhoto()" title="Remove Photo">✕</button>
+          </div>
+
+          <div class="guru-photo-toolbar">
+            <label class="guru-upload-btn">
+              <span>📷 Snap / Upload Photo</span>
+              <input type="file" id="guru-file-input" accept="image/*" style="display:none;" onchange="handleGuruPhotoSelected(event)" />
+            </label>
+            <span id="guru-photo-status" style="font-size:11px; color:var(--text-muted);">No photo attached</span>
+          </div>
+
+          <button id="btn-ask-guru" class="btn-guru-solve" onclick="askGuruAI()">
+            <span>Ask Guru AI</span> <span>⚡</span>
+          </button>
+        </div>
+
+        <div id="guru-loading-card" class="guru-hero-card hidden" style="border-color:rgba(168,85,247,0.5);">
+          <span class="pulse-dot" style="width:12px; height:12px; display:inline-block; margin-bottom:8px; background:#c084fc;"></span>
+          <p id="guru-loading-text" style="font-weight:700; font-size:14px; color:var(--text-primary);">Guru is analyzing your doubt...</p>
+          <p id="guru-loading-subtext" style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Deriving step-by-step solution, identifying core formulas &amp; PW lecture topic...</p>
+        </div>
+
+        <div id="guru-result-card" class="guru-solution-card hidden">
+          <div class="guru-solution-header">
+            <span class="guru-solution-tag" id="guru-solution-subject">SCIENCE &amp; MATH</span>
+            <span style="font-size:11px; color:var(--text-muted);" id="guru-solution-timestamp">Just now</span>
+          </div>
+          <div class="guru-solution-body" id="guru-solution-text"></div>
+          <div class="guru-recommendation-box" id="guru-recommendation-box">
+            <strong>💡 Recommended Chapter &amp; Topic:</strong>
+            <div id="guru-recommendation-text" style="margin-top:4px; font-weight:600; color:var(--accent-terracotta);"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 1: HOME (All Batches & Favourites)                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-home" class="view">
+      
+      <!-- Editorial Header -->
+      <header class="editorial-header">
+        <div class="header-status-row">
+          <div class="header-action-tools">
+            <button id="btn-vip-header-home" class="btn-header-tool vip-badge-tool hidden" onclick="openReferralModal()" title="VIP Student Status">
+              <span>👑</span> <span>VIP</span>
+            </button>
+            <button id="btn-referral-header-home" class="btn-header-tool" onclick="openReferralModal()" title="Refer & Earn VIP">
+              <span>🎁</span> <span>Invite</span>
+            </button>
+            <button id="btn-theme-switcher-home" class="btn-header-tool" onclick="openThemeModal()" title="Change Theme">
+              <span>🎨</span> <span>Theme</span>
+            </button>
+            <button id="btn-install-pwa-home" class="btn-header-tool btn-install-badge hidden" onclick="triggerPWAInstall()" title="Install as Android App">
+              <span>📲</span> <span>Install</span>
+            </button>
+            <button id="btn-open-web-home" class="btn-header-tool btn-web-badge" onclick="openInChromeBrowser()" title="Open on Web / Chrome Browser">
+              <span>🌐</span> <span>Open Web</span>
+            </button>
+          </div>
+          <div class="user-pill" id="user-pill">
+            <span class="user-avatar" id="user-avatar">👤</span>
+            <span class="user-name" id="user-name">Student</span>
+          </div>
+        </div>
+
+        <!-- Platform Navigation Pill & Back to Platforms -->
+        <div class="platform-header-nav">
+          <button class="btn-change-platform" onclick="navigate('platforms')">
+            <span class="back-icon">←</span>
+            <span>All Platforms</span>
+          </button>
+          <span class="active-platform-pill" id="active-platform-indicator">🌟 Physics Wallah</span>
+        </div>
+
+        <div class="editorial-title-block">
+          <h1 class="brand-title" id="home-platform-brand-title">
+            RangeX<span class="accent-serif">Coder</span>
+          </h1>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-box-container">
+          <div class="search-box">
+            <span class="search-prefix">🔍</span>
+            <input
+              type="text"
+              id="batch-search-input"
+              class="search-input"
+              placeholder="Search batches by name or keyword..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <div id="search-clear" class="search-clear-btn hidden" title="Clear search">✕</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Search Results Dropdown/Panel -->
+      <div id="search-results-panel" class="search-results-panel hidden"></div>
+
+      <!-- Provider Platform Switcher -->
+      <div class="provider-selector-wrapper">
+        <div class="provider-selector" id="provider-selector">
+          <button class="provider-btn active" data-provider="pw" onclick="switchProvider('pw')">
+            <span class="provider-emoji">🌟</span>
+            <span class="provider-name">PW</span>
+          </button>
+          <button class="provider-btn" data-provider="nexttopper" onclick="switchProvider('nexttopper')">
+            <span class="provider-emoji">🎓</span>
+            <span class="provider-name">Next Topper</span>
+          </button>
+          <button class="provider-btn" data-provider="missionjeet" onclick="switchProvider('missionjeet')">
+            <span class="provider-emoji">🎯</span>
+            <span class="provider-name">Mission JEET</span>
+          </button>
+          <button class="provider-btn" data-provider="vidyakul" onclick="switchProvider('vidyakul')">
+            <span class="provider-emoji">📚</span>
+            <span class="provider-name">Vidyakul</span>
+          </button>
+          <button class="provider-btn" data-provider="apnacollege" onclick="switchProvider('apnacollege')">
+            <span class="provider-emoji">💻</span>
+            <span class="provider-name">Apna College</span>
+          </button>
+          <button class="provider-btn" data-provider="sketchbook" onclick="switchProvider('sketchbook')">
+            <span class="provider-emoji">🎨</span>
+            <span class="provider-name">SketchBook</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Segmented Tab Navigation (All vs Favourites) -->
+      <div class="segmented-control-wrapper">
+        <div class="segmented-control">
+          <button class="segment-btn active" id="tab-all" onclick="switchHomeTab('all')">
+            <span class="segment-icon">📚</span>
+            <span>All Batches</span>
+            <span class="segment-count" id="count-all-batches"></span>
+          </button>
+          <button class="segment-btn" id="tab-fav" onclick="switchHomeTab('fav')">
+            <span class="segment-icon">❤️</span>
+            <span>Favourites</span>
+            <span class="segment-count" id="count-fav-batches"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section Meta Header -->
+      <div class="section-meta-row">
+        <div class="section-meta-left">
+          <span class="section-heading" id="home-section-label">Enrolled Batches</span>
+        </div>
+      </div>
+
+      <!-- Batches Bento Grid -->
+      <div id="batches-grid" class="batches-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Load More Batches -->
+      <div id="load-more-btn" class="load-more-container hidden">
+        <button class="btn-load-more" onclick="loadMoreBatches()">
+          <span class="btn-load-more-text">Load More Batches</span>
+          <span class="btn-load-more-arrow">↓</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 2: BATCH (Subjects List)                               -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-batch" class="view">
+      <header class="sub-header">
+        <button class="btn-back" onclick="navigate('home')" id="back-to-home">
+          <span class="back-icon">←</span>
+          <span class="back-text">Batches</span>
+        </button>
+      </header>
+
+      <!-- Batch Hero Card -->
+      <div id="batch-hero-card" class="batch-hero-card">
+        <div class="hero-cover-wrap">
+          <img id="batch-hero-img" src="" alt="Batch Cover" class="hero-cover-img" onerror="this.style.display='none'" />
+          <div class="hero-gradient-overlay"></div>
+          <button id="batch-view-heart" class="btn-hero-fav" onclick="toggleFavourite(state.batch?._id, state.batch)" title="Toggle Favourite">
+            🤍
+          </button>
+        </div>
+        <div class="hero-content">
+          <div class="hero-badges">
+            <span class="badge-class" id="batch-hero-class">Class</span>
+            <span class="badge-tag">RANGEXCODER</span>
+          </div>
+          <h2 id="batch-hero-name" class="hero-title"></h2>
+        </div>
+      </div>
+
+      <div class="section-meta-row">
+        <div class="section-meta-left">
+          <span class="section-heading">Subjects</span>
+        </div>
+      </div>
+
+      <!-- Subjects List -->
+      <div id="subjects-list" class="subjects-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 3: SUBJECT (Chapters & Topics)                         -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-subject" class="view">
+      <header class="sub-header">
+        <button class="btn-back" onclick="navigate('batch')" id="back-to-batch">
+          <span class="back-icon">←</span>
+          <span class="back-text" id="back-batch-name">Subjects</span>
+        </button>
+      </header>
+
+      <!-- Subject Hero -->
+      <div class="subject-hero-card">
+        <img id="subject-hero-img" src="" alt="Subject Icon" class="subject-hero-icon" onerror="this.style.display='none'" />
+        <div class="subject-hero-info">
+          <span class="subject-hero-badge">SUBJECT CURRICULUM</span>
+          <h2 id="subject-hero-name" class="subject-hero-title"></h2>
+          <div class="subject-teacher-chip" id="subject-teacher-wrap">
+            <img id="subject-teacher-img" src="" alt="Teacher" class="teacher-chip-img" onerror="this.style.display='none'" />
+            <span id="subject-teacher-name" class="teacher-chip-name">Faculty</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-meta-row">
+        <div class="section-meta-left">
+          <span class="section-heading">Chapters</span>
+        </div>
+      </div>
+
+      <!-- Topics List -->
+      <div id="topics-list" class="topics-list">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- VIEW 4: CONTENT (Lectures, Notes, DPPs)                     -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <section id="view-content" class="view">
+      <header class="sub-header">
+        <button class="btn-back" onclick="navigate('subject')" id="back-to-subject">
+          <span class="back-icon">←</span>
+          <span class="back-text" id="back-subject-name">Chapters</span>
+        </button>
+      </header>
+
+      <!-- Topic Title Banner -->
+      <div class="topic-title-card">
+        <span class="topic-meta-tag">CURRENT CHAPTER</span>
+        <h2 id="topic-hero-name" class="topic-hero-title"></h2>
+      </div>
+
+      <!-- Content Type Tabs -->
+      <div class="content-tabs-sticky" id="content-tabs">
+        <div class="content-tabs-nav">
+          <button class="content-tab-btn active" data-type="Videos" onclick="switchTab('Videos')">
+            <span class="tab-icon">🎬</span>
+            <span class="tab-label">Lectures</span>
+            <span class="tab-pill-count" id="tab-count-Videos"></span>
+          </button>
+          <button class="content-tab-btn" data-type="Notes" onclick="switchTab('Notes')">
+            <span class="tab-icon">📄</span>
+            <span class="tab-label">Notes</span>
+            <span class="tab-pill-count" id="tab-count-Notes"></span>
+          </button>
+          <button class="content-tab-btn" data-type="DppNotes" onclick="switchTab('DppNotes')">
+            <span class="tab-icon">📝</span>
+            <span class="tab-label">DPP</span>
+            <span class="tab-pill-count" id="tab-count-DppNotes"></span>
+          </button>
+          <button class="content-tab-btn" data-type="DppVideos" onclick="switchTab('DppVideos')">
+            <span class="tab-icon">🎥</span>
+            <span class="tab-label">DPP Vid</span>
+            <span class="tab-pill-count" id="tab-count-DppVideos"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Items List -->
+      <div id="content-list" class="content-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Load More Content -->
+      <div id="content-load-more" class="load-more-container hidden">
+        <button id="content-load-more-btn" class="btn-load-more">
+          <span class="btn-load-more-text">Load More Items</span>
+          <span class="btn-load-more-arrow">↓</span>
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ─── Toast Notification Container ─── -->
+  <div id="toast" class="editorial-toast" aria-live="polite"></div>
+
+  <!-- ─── Global Page Loader ─── -->
+  <div id="page-loader" class="page-loader hidden">
+    <div class="editorial-spinner"></div>
+    <span class="loader-text">SYNCING_DATA...</span>
+  </div>
+
+  <!-- ─── Bot Delivery Confirmation Bottom Sheet ─── -->
+  <div id="popup-overlay" class="popup-overlay hidden" onclick="closePopup()">
+    <div class="popup-sheet" id="popup-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-drag-handle"></div>
+      
+      <div class="sheet-header">
+        <div class="sheet-icon-wrap">🚀</div>
+        <div class="sheet-title-wrap">
+          <h3 class="sheet-title">Delivered to <span class="accent-serif">Telegram</span></h3>
+          <p class="sheet-sub">Your requested file &amp; quality menu are ready in your chat</p>
+        </div>
+      </div>
+
+      <div class="sheet-actions">
+        <button id="popup-open-bot" class="btn-sheet-primary" onclick="openBotLink('https://t.me/RangeXCoder_studybot')">
+          <span>Open Bot Chat</span>
+          <span class="sheet-arrow">↗</span>
+        </button>
+        <button id="popup-retry-btn" class="btn-sheet-secondary" onclick="retrySend()">
+          <span>Not received? Tap to retry</span>
+          <span class="retry-dot">🔴</span>
+        </button>
+      </div>
+
+      <div class="sheet-footer-hint">
+        <span class="hint-arrow">↓</span>
+        <span>Swipe down or tap close to continue browsing</span>
+      </div>
+
+      <button class="btn-sheet-close" onclick="closePopup()">✕ Close</button>
+    </div>
+  </div>
+
+  <!-- RangeXCoder Video Player Modal -->
+  <div id="player-modal" class="player-modal-backdrop hidden">
+    <div class="player-container">
+      <div class="video-wrapper" id="video-wrapper" onclick="togglePlayerControlsVisibility(event)">
+        <!-- Video Element -->
+        <video id="rangex-video" playsinline preload="metadata"></video>
+        
+        <!-- Top Bar Overlay (Floating) -->
+        <div class="player-top-bar" id="player-top-bar">
+          <div class="player-title-box">
+            <span class="player-badge">⚡ RANGEXCODER PLAYER</span>
+            <div class="player-video-title" id="player-video-title">Lecture Video</div>
+          </div>
+          <button class="player-close-btn" onclick="closeRangeXPlayer(event)" title="Close Player">✕</button>
+        </div>
+
+        <!-- Big Center Play/Pause Overlay -->
+        <div class="video-play-center" id="video-play-center" onclick="toggleRangeXPlay(event)">
+          <span class="center-play-icon" id="center-play-icon">▶</span>
+        </div>
+
+        <!-- Bottom Controls Overlay (Floating Netlify/YouTube Style) -->
+        <div class="player-bottom-controls" id="player-bottom-controls">
+          <!-- Custom Video Scrubber -->
+          <div class="player-scrubber-wrap">
+            <span class="player-time-curr" id="time-current">00:00</span>
+            <div class="scrubber-track" id="scrubber-track">
+              <div class="scrubber-buffered" id="scrubber-buffered"></div>
+              <div class="scrubber-played" id="scrubber-played"></div>
+              <div class="scrubber-handle" id="scrubber-handle"></div>
+            </div>
+            <span class="player-time-total" id="time-total">00:00</span>
+          </div>
+
+          <!-- Controls Buttons Bar -->
+          <div class="player-controls-bar">
+            <div class="controls-left">
+              <button class="ctrl-btn-action" id="btn-play-pause" onclick="toggleRangeXPlay(event)" title="Play/Pause">▶</button>
+              <button class="ctrl-btn-action" onclick="skipVideo(-10)" title="Rewind 10s">↺ 10s</button>
+              <button class="ctrl-btn-action" onclick="skipVideo(10)" title="Forward 10s">↻ 10s</button>
+            </div>
+
+            <div class="controls-center">
+              <span class="speed-label">Speed:</span>
+              <div class="speed-buttons">
+                <button class="speed-btn active" onclick="setPlaySpeed(1)">1x</button>
+                <button class="speed-btn" onclick="setPlaySpeed(1.25)">1.25x</button>
+                <button class="speed-btn" onclick="setPlaySpeed(1.5)">1.5x</button>
+                <button class="speed-btn" onclick="setPlaySpeed(2)">2x</button>
+                <button class="speed-btn" onclick="setPlaySpeed(3)">3x</button>
+              </div>
+            </div>
+
+            <div class="controls-right">
+              <!-- Quality Selector -->
+              <div class="quality-dropdown-wrap" id="quality-dropdown-wrap">
+                <button class="ctrl-btn-quality" id="btn-quality" onclick="toggleQualityMenu(event)" title="Select Video Quality">
+                  <span>⚙️</span>
+                  <span id="quality-label">Auto</span>
+                </button>
+                <div class="quality-menu hidden" id="quality-menu">
+                  <!-- Dynamically populated: Auto, 720p, 480p, 360p, 240p -->
+                </div>
+              </div>
+              <!-- Fullscreen / Theatre Toggle -->
+              <button class="ctrl-btn-fs" onclick="toggleRangeXFullscreen()" title="Fullscreen">⛶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Layer 2: Telegram-Only Security Guard Screen ─── -->
+  <div id="telegram-only-guard" class="telegram-guard-screen hidden">
+    <div class="guard-card">
+      <div class="guard-shield-icon">🔒</div>
+      <div class="guard-badge">// SECURITY PROTOCOL ACTIVE</div>
+      <h2 class="guard-title">Access <span class="accent-serif">Restricted</span></h2>
+      <p class="guard-text">
+        This study hub is strictly authorized for official Telegram sessions only. Direct browser access is locked to prevent unauthorized data scraping &amp; mirroring.
+      </p>
+      <div class="guard-divider"></div>
+      <p class="guard-subtext">Please launch the official Telegram bot to access all batches, lectures, notes &amp; DPPs.</p>
+      <div class="guard-actions">
+        <a href="https://t.me/RangeXCoder_studybot" class="btn-guard-telegram" target="_blank" rel="noopener">
+          <span>🚀 Open in Telegram (@RangeXCoder_studybot)</span>
+        </a>
+        <a href="https://t.me/+2wmMyRob0Os0MTRl" class="btn-guard-channel" target="_blank" rel="noopener">
+          <span>📢 Join Official Channel</span>
+        </a>
+      </div>
+      <div class="guard-footer-meta">
+        <span>RANGE_X_CODER // ZERO_TRUST_GATEWAY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Layer 3: Community Lock (ForceSub Guard) Screen ─── -->
+  <div id="forcesub-guard" class="telegram-guard-screen hidden">
+    <div class="guard-card">
+      <div class="guard-shield-icon" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(124, 58, 237, 0.2)); border-color: rgba(234, 179, 8, 0.6); box-shadow: 0 0 25px rgba(234, 179, 8, 0.4);">🔒</div>
+      <div class="guard-badge" style="color: #eab308; background: rgba(234, 179, 8, 0.12); border-color: rgba(234, 179, 8, 0.3);">// COMMUNITY ACCESS LOCKED</div>
+      <h2 class="guard-title">Access <span class="accent-serif">Restricted</span></h2>
+      <p id="forcesub-message" class="guard-text">
+        To use RangeXCoder Study Hub and access batches, lectures, notes &amp; DPPs, you must join our official community channels.
+      </p>
+      <div class="guard-divider"></div>
+      <p class="guard-subtext" id="forcesub-subtext">Join the required communities below and click Verify:</p>
+      <div class="guard-actions" id="forcesub-actions">
+        <a id="forcesub-channel-btn" href="https://t.me/+2wmMyRob0Os0MTRl" class="btn-guard-telegram" target="_blank" rel="noopener">
+          <span>📢 1. Join Official Channel</span>
+        </a>
+        <a id="forcesub-group-btn" href="https://t.me/rangexcoder_chat" class="btn-guard-channel" target="_blank" rel="noopener">
+          <span>💬 2. Join Discussion Group</span>
+        </a>
+        <button id="forcesub-verify-btn" class="btn-guard-telegram" style="background: linear-gradient(135deg, #10b981, #059669); border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); cursor: pointer; width: 100%;" onclick="verifySubFromMiniApp()">
+          <span>🔄 Joined! Verify Now</span>
+        </button>
+      </div>
+      <div class="guard-footer-meta" style="margin-top: 20px;">
+        <span style="display: block; margin-bottom: 4px; color: #94a3b8;">Developer: Amber Kasaudhan | <a href="https://t.me/badboy_295" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">Badboy</a></span>
+        <span>RANGE_X_CODER // FORCESUB_GATEWAY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Layer 4: Mini App Off (Maintenance Guard) Screen ─── -->
+  <div id="maintenance-guard" class="telegram-guard-screen hidden">
+    <div class="guard-card">
+      <div class="guard-shield-icon" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2)); border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);">🛑</div>
+      <div class="guard-badge" style="color: #ef4444; background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3);">// SYSTEM OFFLINE</div>
+      <h2 class="guard-title">Mini App <span class="accent-serif" style="color: #ef4444;">Off</span></h2>
+      <p id="maintenance-message" class="guard-text">
+        The Study Hub is currently paused for scheduled maintenance.
+      </p>
+      <div class="guard-divider"></div>
+      <p class="guard-subtext">We are upgrading our servers &amp; syncing new batches. Please check back shortly.</p>
+      <div class="guard-actions">
+        <button id="maintenance-refresh-btn" class="btn-guard-telegram" style="background: linear-gradient(135deg, #ef4444, #dc2626); border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); cursor: pointer; width: 100%;" onclick="checkMaintenanceAgain()">
+          <span>🔄 Check Again / Refresh</span>
+        </button>
+        <a id="maintenance-channel-link" href="https://t.me/+2wmMyRob0Os0MTRl" class="btn-guard-channel" target="_blank" rel="noopener">
+          <span>📢 Join Official Channel For Updates</span>
+        </a>
+      </div>
+      <div class="guard-footer-meta" style="margin-top: 20px;">
+        <span style="display: block; margin-bottom: 4px; color: #94a3b8;">Developer: Amber Kasaudhan | <a href="https://t.me/badboy_295" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">Badboy</a></span>
+        <span>RANGE_X_CODER // MAINTENANCE_GATEWAY</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Modal 1: Theme Engine Picker ─── -->
+  <div id="modal-theme-picker" class="custom-modal-backdrop hidden" onclick="closeThemeModalOnBackdrop(event)">
+    <div class="custom-modal-sheet">
+      <div class="custom-modal-header">
+        <h3 class="custom-modal-title">Select <span class="accent-serif">Theme Skin</span></h3>
+        <button class="custom-modal-close" onclick="closeThemeModal()">✕</button>
+      </div>
+      <p style="font-size:12px; color:var(--text-secondary);">Personalize your study experience with high-contrast, premium color schemes.</p>
+      
+      <div class="theme-options-grid">
+        <div class="theme-option-card" id="theme-card-violet" onclick="selectTheme('violet')">
+          <div class="theme-swatches">
+            <span class="theme-swatch" style="background:#08080a; border:1px solid #333;"></span>
+            <span class="theme-swatch" style="background:#a855f7;"></span>
+            <span class="theme-swatch" style="background:#ff6b4a;"></span>
+          </div>
+          <span class="theme-name">PW Violet (Default)</span>
+          <span style="font-size:11px; color:var(--text-muted);">Deep midnight &amp; royal purple</span>
+        </div>
+
+        <div class="theme-option-card" id="theme-card-cyberpunk" onclick="selectTheme('cyberpunk')">
+          <div class="theme-swatches">
+            <span class="theme-swatch" style="background:#030806; border:1px solid #333;"></span>
+            <span class="theme-swatch" style="background:#00ff9d;"></span>
+            <span class="theme-swatch" style="background:#00e5ff;"></span>
+          </div>
+          <span class="theme-name">Neon Cyberpunk</span>
+          <span style="font-size:11px; color:var(--text-muted);">Matrix neon green &amp; cyan</span>
+        </div>
+
+        <div class="theme-option-card" id="theme-card-netflix" onclick="selectTheme('netflix')">
+          <div class="theme-swatches">
+            <span class="theme-swatch" style="background:#060606; border:1px solid #333;"></span>
+            <span class="theme-swatch" style="background:#e50914;"></span>
+            <span class="theme-swatch" style="background:#ff3838;"></span>
+          </div>
+          <span class="theme-name">Netflix Dark</span>
+          <span style="font-size:11px; color:var(--text-muted);">Cinematic obsidian &amp; crimson red</span>
+        </div>
+
+        <div class="theme-option-card" id="theme-card-gold" onclick="selectTheme('gold')">
+          <div class="theme-swatches">
+            <span class="theme-swatch" style="background:#070604; border:1px solid #333;"></span>
+            <span class="theme-swatch" style="background:#ffd700;"></span>
+            <span class="theme-swatch" style="background:#f59e0b;"></span>
+          </div>
+          <span class="theme-name">Royal Gold (VIP)</span>
+          <span style="font-size:11px; color:var(--text-muted);">Luxury obsidian &amp; amber gold</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Modal 2: VIP Referral Hub ─── -->
+  <div id="modal-referral" class="custom-modal-backdrop hidden" onclick="closeReferralModalOnBackdrop(event)">
+    <div class="custom-modal-sheet">
+      <div class="custom-modal-header">
+        <h3 class="custom-modal-title">VIP <span class="accent-serif">Referral Hub</span> 👑</h3>
+        <button class="custom-modal-close" onclick="closeReferralModal()">✕</button>
+      </div>
+      <p style="font-size:13px; color:var(--text-secondary); line-height:1.5;">
+        Invite <strong>3 friends</strong> to unlock permanent <strong>VIP Student Status</strong>, priority fast streaming, and an exclusive glowing crown badge!
+      </p>
+
+      <div class="referral-stat-row">
+        <div class="referral-stat-box">
+          <div class="referral-stat-val" id="ref-stat-count">0 / 3</div>
+          <div class="referral-stat-lbl">Friends Joined</div>
+        </div>
+        <div class="referral-stat-box">
+          <div class="referral-stat-val" id="ref-stat-status" style="font-size:16px; padding-top:4px;">Student</div>
+          <div class="referral-stat-lbl">Current Rank</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">YOUR UNIQUE INVITE LINK</label>
+        <div class="referral-link-box">
+          <span class="referral-link-txt" id="referral-link-display">Generating link...</span>
+          <button class="btn-copy-link" onclick="copyReferralLink()">Copy 📋</button>
+        </div>
+      </div>
+
+      <button class="btn-guard-telegram" style="width:100%; cursor:pointer; background:linear-gradient(135deg, #a855f7, #6366f1); border-color:rgba(168,85,247,0.5);" onclick="shareReferralTelegram()">
+        <span>📤 Share Link on Telegram</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Modal 3: Install App Guide ─── -->
+  <div id="modal-install-guide" class="custom-modal-backdrop hidden" onclick="closeInstallModalOnBackdrop(event)">
+    <div class="custom-modal-sheet">
+      <div class="custom-modal-header">
+        <h3 class="custom-modal-title">Install <span class="accent-serif">RangeXCoder App</span> 📲</h3>
+        <button class="custom-modal-close" onclick="closeInstallModal()">✕</button>
+      </div>
+      <div style="text-align:center; padding:10px 0 16px;">
+        <span style="font-size:48px; display:block; margin-bottom:10px;">📲</span>
+        <p style="font-size:14px; color:var(--text-primary); font-weight:700;">Get the Standalone Android App</p>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:4px; line-height:1.5;">
+          Launch RangeXCoder directly from your phone home screen like a native app — with full screen player, zero address bars, and instant launch!
+        </p>
+      </div>
+
+      <div id="pwa-native-install-section" style="display:flex; flex-direction:column; gap:10px;">
+        <button id="btn-pwa-install-action" class="btn-guard-telegram" style="width:100%; cursor:pointer; background:linear-gradient(135deg, #00ff9d, #00e5ff); color:#030806; font-weight:800; border:none; padding:14px; font-size:14px; border-radius:12px;" onclick="handleInstallAction()">
+          <span>⚡ Install App Now</span>
+        </button>
+
+        <button class="btn-guard-telegram" style="width:100%; cursor:pointer; background:rgba(255,255,255,0.08); color:var(--text-primary); font-weight:700; border:1px solid var(--border-subtle); padding:12px; font-size:13px; border-radius:12px;" onclick="openInChromeBrowser()">
+          <span>🌐 Open in Chrome (Fastest Install)</span>
+        </button>
+      </div>
+
+      <div id="pwa-manual-guide-section" style="background:var(--bg-input); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:14px; margin-top:14px; font-size:12px; color:var(--text-secondary); line-height:1.6;">
+        <strong style="color:var(--accent-cyan); display:block; margin-bottom:4px;">💡 Android / Telegram Users:</strong>
+        Telegram ke andar app install blocked rehta hai. <strong>"Open in Chrome"</strong> dabayein &rarr; wahan Chrome ke 3-dots (⋮) par tap karke <strong>"Install app"</strong> ya <strong>"Add to Home screen"</strong> select karein.
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js?v=49" defer></script>
+</body>
+</html>
