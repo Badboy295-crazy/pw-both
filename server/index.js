@@ -2142,8 +2142,6 @@ app.get('/health', async (_, res) => {
   });
 });
 
-});
-
 // ─── /api/config — Public Branding Endpoint ───────────────────
 app.get('/api/config', (req, res) => {
   res.json({
