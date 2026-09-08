@@ -1,9 +1,9 @@
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Telegram Mini App (Claude Editorial Edition)
-   State Machine Navigation â€¢ Dual API Architecture â€¢ Live Sync
+   State Machine Navigation • Dual API Architecture • Live Sync
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-// â”€â”€â”€ Global Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Global Configuration ──────────────────────────────────────
 const CONFIG = {
   // Backend server URL for Batches, Subjects, and Topics (Render Backend)
   SERVER_URL: '', // Auto-detected from window.location (set per deployment via APP_CONFIG)
@@ -21,10 +21,10 @@ const CONFIG = {
 
   // Content tab metadata
   TABS: [
-    { type: 'Videos',    label: 'Lectures', icon: 'ðŸŽ¬' },
-    { type: 'Notes',     label: 'Notes',    icon: 'ðŸ“„' },
+    { type: 'Videos',    label: 'Lectures', icon: '🎬' },
+    { type: 'Notes',     label: 'Notes',    icon: '📄' },
     { type: 'DppNotes',  label: 'DPP',      icon: 'ðŸ“' },
-    { type: 'DppVideos', label: 'DPP Vid',  icon: 'ðŸŽ¥' },
+    { type: 'DppVideos', label: 'DPP Vid',  icon: '📹' },
   ],
 };
 
@@ -91,7 +91,7 @@ const CONFIG = {
   }
 })();
 
-// â”€â”€â”€ Reactive Application State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Reactive Application State ────────────────────────────────
 const state = {
   tg: null,
   chatId: null,
@@ -180,7 +180,7 @@ document.addEventListener('keydown', (e) => {
   }
 }, { capture: true });
 
-// â”€â”€â”€ Dynamic Telegram InitData & Identity Resolver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Dynamic Telegram InitData & Identity Resolver ─────────────
 function getTelegramInitData() {
   // 1. Native Telegram WebApp SDK
   if (window.Telegram?.WebApp?.initData && window.Telegram.WebApp.initData.length > 0) {
@@ -225,14 +225,14 @@ function parseUserFromInitData(initData) {
   return null;
 }
 
-// â”€â”€â”€ Dynamic Telegram User ID Resolver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Dynamic Telegram User ID Resolver ─────────────────────────
 function getTelegramUserId() {
   if (state.chatId) return state.chatId;
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user || parseUserFromInitData(getTelegramInitData());
   return user?.id || null;
 }
 
-// â”€â”€â”€ Dynamic Server Base URL Resolver â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Dynamic Server Base URL Resolver ──────────────────────────
 function getServerBaseUrl() {
   if (typeof window !== 'undefined' && window.location) {
     // 1. Check Query Param or Hash for backend URL
@@ -593,7 +593,7 @@ function parseApiRouteToWsAction(path) {
   return null;
 }
 
-// â”€â”€â”€ Telegram WebApp Initialization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Telegram WebApp Initialization ────────────────────────────
 function initTelegram() {
   WSBridge.init();
   const initData = getTelegramInitData();
@@ -623,12 +623,12 @@ function initTelegram() {
     state.chatId = user.id;
     const avatar = document.getElementById('user-avatar');
     const name = document.getElementById('user-name');
-    if (avatar) avatar.textContent = user.first_name?.[0] || 'ðŸ‘¤';
+    if (avatar) avatar.textContent = user.first_name?.[0] || '👤';
     if (name) name.textContent = user.first_name || 'Student';
 
     const avatarPlat = document.getElementById('user-avatar-platforms');
     const namePlat = document.getElementById('user-name-platforms');
-    if (avatarPlat) avatarPlat.textContent = user.first_name?.[0] || 'ðŸ‘¤';
+    if (avatarPlat) avatarPlat.textContent = user.first_name?.[0] || '👤';
     if (namePlat) namePlat.textContent = user.first_name || 'Student';
   }
 
@@ -735,7 +735,7 @@ async function checkInAppForceSub(manualVerify = false) {
       if (msgEl) {
         msgEl.innerHTML = 'To access study materials, video lectures, notes &amp; DPPs, you must join both our <strong>Official Channel</strong> and <strong>Discussion Group</strong>.';
       }
-      if (subtextEl) subtextEl.textContent = '1. Join Channel  â€¢  2. Join Group  â€¢  Tap Verify';
+      if (subtextEl) subtextEl.textContent = '1. Join Channel  •  2. Join Group  •  Tap Verify';
       if (channelBtn) channelBtn.style.display = 'flex';
       if (groupBtn) groupBtn.style.display = 'flex';
     } else if (channelMissing) {
@@ -756,7 +756,7 @@ async function checkInAppForceSub(manualVerify = false) {
 
     if (manualVerify) {
       haptic('error');
-      showToast('ðŸ”’ Verification pending: Please join the required community above first!');
+      showToast('🔒 Verification pending: Please join the required community above first!');
     }
     return false;
   } catch (err) {
@@ -785,7 +785,7 @@ window.verifySubFromMiniApp = async function() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = origHtml || '<span>ðŸ”„ Joined! Verify Now</span>';
+      btn.innerHTML = origHtml || '<span>🔄 Joined! Verify Now</span>';
     }
   }
 };
@@ -819,19 +819,19 @@ window.checkMaintenanceAgain = async function() {
       const appEl = document.getElementById('app');
       if (appEl) appEl.style.display = '';
       haptic('success');
-      showToast('ðŸŸ¢ Study Hub is now LIVE!');
+      showToast('🟢 Study Hub is now LIVE!');
       loadBatches(true);
       updateTgBackButton();
     } else {
       haptic('error');
-      showToast('ðŸ›‘ App is still in maintenance mode. Please wait a moment.');
+      showToast('🛑 App is still in maintenance mode. Please wait a moment.');
     }
   } catch (e) {
     console.error(e);
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = origHtml || '<span>ðŸ”„ Check Again / Refresh</span>';
+      btn.innerHTML = origHtml || '<span>🔄 Check Again / Refresh</span>';
     }
   }
 };
@@ -857,7 +857,7 @@ function haptic(type = 'light') {
   } catch(e) {}
 }
 
-// â”€â”€â”€ View Navigation Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── View Navigation Router ────────────────────────────────────
 function navigate(view) {
   const current = document.getElementById(`view-${state.view}`);
   const next = document.getElementById(`view-${view}`);
@@ -886,13 +886,13 @@ function updateBreadcrumbs(view) {
   }
   if (view === 'guru') {
     bar.classList.remove('hidden');
-    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span> <span class="crumb-sep">â€º</span> <span class="crumb-current">ðŸ¤– ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
+    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span> <span class="crumb-sep">â€º</span> <span class="crumb-current">🤖 ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
     return;
   }
 
   bar.classList.remove('hidden');
 
-  const p = PROVIDERS[state.provider] || { name: state.provider, icon: 'âš¡' };
+  const p = PROVIDERS[state.provider] || { name: state.provider, icon: '⚡' };
   const bName = state.batch?.name || state.batch?.title || 'Batch';
   const sName = state.subject?.subject || state.subject?.title || 'Subject';
   const tName = state.topic?.name || state.topic?.topic || 'Chapter';
@@ -939,12 +939,26 @@ function applyBrandConfig(cfg) {
     document.documentElement.style.setProperty('--accent-primary-border', `rgba(${r},${g},${b},0.35)`);
   }
   // Update data-brand-* elements
-  document.querySelectorAll('[data-brand-name]').forEach(el => { el.textContent = cfg.BOT_NAME || 'Study Hub'; });
-  document.querySelectorAll('[data-brand-powered-by]').forEach(el => { el.textContent = cfg.POWERED_BY || 'Study Hub'; });
+  const bName = cfg.BOT_NAME || 'Study Hub';
+  document.querySelectorAll('[data-brand-name]').forEach(el => { el.textContent = bName; });
+  document.querySelectorAll('[data-brand-powered-by]').forEach(el => { el.textContent = cfg.POWERED_BY || bName; });
   document.querySelectorAll('[data-brand-bot-link]').forEach(el => { el.href = cfg.BOT_LINK || '#'; });
+
+  // Explicitly update header and hero titles
+  const homeTitle = document.getElementById('home-platform-brand-title');
+  if (homeTitle) {
+    const span = homeTitle.querySelector('[data-brand-name]');
+    if (span) span.textContent = bName;
+    else homeTitle.innerHTML = `<span data-brand-name>${bName}</span>`;
+  }
+  document.querySelectorAll('.brand-title').forEach(el => {
+    const span = el.querySelector('[data-brand-name]');
+    if (span) span.textContent = bName;
+  });
+
   // Player badge
   const badge = document.querySelector('.player-badge');
-  if (badge) badge.textContent = '\u26a1 ' + (cfg.BOT_NAME || 'Study Hub').toUpperCase() + ' PLAYER';
+  if (badge) badge.textContent = '⚡ ' + bName.toUpperCase() + ' PLAYER';
   // Guard link (bot)
   document.querySelectorAll('[data-brand-bot-link]').forEach(el => {
     if (cfg.BOT_LINK) el.href = cfg.BOT_LINK;
@@ -1025,7 +1039,7 @@ function navigateGlobalBack() {
   }
 }
 
-// â”€â”€â”€ Resilient API Helpers (WebSocket Tunnel First, HTTP Fallback) â”€â”€â”€
+// ─── Resilient API Helpers (WebSocket Tunnel First, HTTP Fallback) ───
 async function serverGet(path, retries = 1) {
   // 1. Route through persistent WebSocket Tunnel if available (0 Fetch/XHR footprint!)
   try {
@@ -1120,7 +1134,7 @@ async function contentGet(path) {
   return await serverGet(`/api${path}`);
 }
 
-// â”€â”€â”€ Asset & Formatting Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Asset & Formatting Utilities ──────────────────────────────
 function imgUrl(previewImage) {
   if (!previewImage) return '';
   if (typeof previewImage === 'string') return previewImage;
@@ -1140,7 +1154,7 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// â”€â”€â”€ Editorial Toast Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Editorial Toast Notifications ─────────────────────────────
 let toastTimer = null;
 function showToast(msg, duration = 2500) {
   const toast = document.getElementById('toast');
@@ -1151,7 +1165,7 @@ function showToast(msg, duration = 2500) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
 }
 
-// â”€â”€â”€ Skeletons & Loaders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Skeletons & Loaders ───────────────────────────────────────
 function renderSkeletons(containerId, count = 4) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -1179,16 +1193,16 @@ function skeletonRows(count = 4) {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// VIEW 1: HOME â€” Batches & Search & Multi-Provider
+// VIEW 1: HOME — Batches & Search & Multi-Provider
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const PROVIDERS = {
-  pw: { name: 'Physics Wallah', appId: '5eb393ee95fab7468a79d189', icon: 'ðŸŒŸ' },
-  nexttopper: { name: 'Next Toppers', appId: '5eb393ee95fab7468a79d182', icon: 'ðŸŽ“' },
-  missionjeet: { name: 'Mission JEET', appId: '69d6a2a167a3a4263ae3d0d0', icon: 'ðŸŽ¯' },
-  vidyakul: { name: 'Vidyakul', appId: '5eb393ee95fab7468a79d2853', icon: 'ðŸ“š' },
-  apnacollege: { name: 'Apna College', appId: '5eb393ee95fab7468a79456669', icon: 'ðŸ’»' },
-  sketchbook: { name: 'SketchBook', appId: '6a3d1c9cd754c8894bf5812a', icon: 'ðŸŽ¨' },
+  pw: { name: 'Physics Wallah', appId: '5eb393ee95fab7468a79d189', icon: '🌟' },
+  nexttopper: { name: 'Next Toppers', appId: '5eb393ee95fab7468a79d182', icon: '🎓' },
+  missionjeet: { name: 'Mission JEET', appId: '69d6a2a167a3a4263ae3d0d0', icon: '🎯' },
+  vidyakul: { name: 'Vidyakul', appId: '5eb393ee95fab7468a79d2853', icon: '📚' },
+  apnacollege: { name: 'Apna College', appId: '5eb393ee95fab7468a79456669', icon: '💻' },
+  sketchbook: { name: 'SketchBook', appId: '6a3d1c9cd754c8894bf5812a', icon: '🎨' },
 };
 
 function isStreamProvider(provider) {
@@ -1215,7 +1229,7 @@ function exitGuruToPlatforms() {
 }
 
 function updateActivePlatformIndicator() {
-  const p = PROVIDERS[state.provider] || { name: state.provider, icon: 'âš¡' };
+  const p = PROVIDERS[state.provider] || { name: state.provider, icon: '⚡' };
   const el = document.getElementById('active-platform-indicator');
   if (el) el.textContent = `${p.icon} ${p.name}`;
   const sub = document.getElementById('home-platform-brand-subtitle');
@@ -1259,7 +1273,7 @@ function switchProvider(providerKey) {
 
   updateActivePlatformIndicator();
 
-  const p = PROVIDERS[providerKey] || { name: providerKey, icon: 'âš¡' };
+  const p = PROVIDERS[providerKey] || { name: providerKey, icon: '⚡' };
   showToast(`${p.icon} Switched to ${p.name}`);
 
   // Immediately render skeletons in the grid to clear old provider's batches
@@ -1333,10 +1347,10 @@ async function loadBatches(reset = false) {
     if (state.batches.length === 0 && grid) {
       grid.innerHTML = `
         <div class="error-state" style="grid-column:1/-1">
-          <div class="error-state-icon">âš¡</div>
+          <div class="error-state-icon">⚡</div>
           <div class="error-state-title">Waking Up Cloud Server</div>
           <div class="error-state-msg">The backend is booting up from standby. Please tap retry in a moment.</div>
-          <button class="retry-btn" onclick="loadBatches(true)">ðŸ”„ Tap to Connect</button>
+          <button class="retry-btn" onclick="loadBatches(true)">🔄 Tap to Connect</button>
         </div>`;
     }
   } finally {
@@ -1381,7 +1395,7 @@ function renderBatchCard(b) {
         <h3 class="batch-card-title">${name}</h3>
         <div class="batch-card-footer">
           <span class="batch-card-tag">Explore Curriculum</span>
-          <span class="batch-card-arrow">â†’</span>
+          <span class="batch-card-arrow">→</span>
         </div>
       </div>
     </div>`;
@@ -1425,7 +1439,7 @@ function openBatch(batchRef) {
   if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? 'â¤ï¸' : 'ðŸ¤';
 }
 
-// â”€â”€â”€ Instant Search Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Instant Search Engine ─────────────────────────────────────
 function initSearch() {
   const input = document.getElementById('batch-search-input');
   const clearBtn = document.getElementById('search-clear');
@@ -1496,7 +1510,7 @@ async function doSearch(q) {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// VIEW 2: BATCH â€” Subjects
+// VIEW 2: BATCH — Subjects
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 async function loadSubjects(batchId) {
@@ -1513,10 +1527,10 @@ async function loadSubjects(batchId) {
     if (!subjects.length) {
       list.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">ðŸ“‚</div>
+          <div class="empty-state-icon">📁</div>
           <div class="empty-state-title">No Subjects Found</div>
           <div class="empty-state-sub">Curriculum details are not available yet</div>
-          <button class="retry-btn" style="margin-top:14px;" onclick="loadSubjects('${batchId}')">ðŸ”„ Refresh</button>
+          <button class="retry-btn" style="margin-top:14px;" onclick="loadSubjects('${batchId}')">🔄 Refresh</button>
         </div>`;
       return;
     }
@@ -1533,7 +1547,7 @@ async function loadSubjects(batchId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">âš ï¸</div>
+        <div class="error-state-icon">⚠️ï¸</div>
         <div class="error-state-title">Failed to load subjects</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadSubjects('${batchId}')">Retry</button>
@@ -1558,9 +1572,9 @@ function renderSubjectCard(s) {
       ${img ? `<img class="subject-card-icon" src="${img}" alt="${subName}" onerror="this.style.display='none'" />` : '<div class="subject-card-icon"></div>'}
       <div class="subject-card-info">
         <div class="subject-card-title">${subName}</div>
-        <div class="subject-card-teacher">${tName ? `Faculty: ${tName} â€¢ ` : ''}${videoCount} Lectures</div>
+        <div class="subject-card-teacher">${tName ? `Faculty: ${tName} • ` : ''}${videoCount} Lectures</div>
       </div>
-      <span class="subject-card-arrow">â†’</span>
+      <span class="subject-card-arrow">→</span>
     </div>`;
 }
 
@@ -1615,7 +1629,7 @@ function openSubject(subjectRef) {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// VIEW 3: SUBJECT â€” Topics / Chapters
+// VIEW 3: SUBJECT — Topics / Chapters
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 async function loadTopics(batchId, subjectId) {
@@ -1651,7 +1665,7 @@ async function loadTopics(batchId, subjectId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">âš ï¸</div>
+        <div class="error-state-icon">⚠️ï¸</div>
         <div class="error-state-title">Failed to load chapters</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadTopics('${batchId}','${subjectId}')">Retry</button>
@@ -1727,7 +1741,7 @@ function openTopic(topicRef) {
   document.getElementById('content-list').innerHTML = skeletonRows(5);
   updateContentLoadMore('Videos');
 
-  // â”€â”€â”€ PARALLEL PRE-FETCH: Load Page 1 for All 4 Tabs â”€â”€â”€
+  // ─── PARALLEL PRE-FETCH: Load Page 1 for All 4 Tabs ───
   const batchId = state.batch._id;
   const subjectSlug = state.subject.slug || state.subject._id || state.subject.id;
   const topicSlug = t.slug || t._id || t.id;
@@ -1759,7 +1773,7 @@ function openTopic(topicRef) {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// VIEW 4: CONTENT â€” Lectures, Notes, DPPs
+// VIEW 4: CONTENT — Lectures, Notes, DPPs
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function switchTab(type) {
@@ -1867,7 +1881,7 @@ async function loadContent(type, reset = false) {
       if (newItems.length === 0) {
         // No new items: The server returned the same dataset or reached the end
         state.contentHasMore[type] = false;
-        showToast('â„¹ï¸ All items loaded');
+        showToast('ℹ️ï¸ All items loaded');
       } else {
         state.content[type].push(...newItems);
         state.contentPage[type]++;
@@ -1897,7 +1911,7 @@ async function loadContent(type, reset = false) {
     if (reset) {
       list.innerHTML = `
         <div class="error-state">
-          <div class="error-state-icon">âš ï¸</div>
+          <div class="error-state-icon">⚠️ï¸</div>
           <div class="error-state-title">Failed to load content</div>
           <div class="error-state-msg">${err.message}</div>
           <button class="retry-btn" onclick="loadContent('${type}', true)">Retry</button>
@@ -1916,7 +1930,7 @@ function renderContentList(type) {
   const items = state.content[type] || [];
 
   if (!items.length) {
-    const tabCfg = CONFIG.TABS.find(t => t.type === type) || { icon: 'ðŸ“‚', label: type };
+    const tabCfg = CONFIG.TABS.find(t => t.type === type) || { icon: '📁', label: type };
     list.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">${tabCfg.icon}</div>
@@ -2030,7 +2044,7 @@ async function handleStreamPlay(itemId, type) {
 
     const streamUrl = res?.data?.link || res?.link || '';
     if (!streamUrl) {
-      showToast('âš ï¸ Video stream is currently unavailable. Please try another lecture.');
+      showToast('⚠️ï¸ Video stream is currently unavailable. Please try another lecture.');
       return;
     }
 
@@ -2085,21 +2099,21 @@ function renderNotesItem(item, type) {
     return `
     <div class="content-item" onclick="sendContent('${payloadKey}', '${type}')">
       <div class="content-doc-icon-wrap ${isDpp ? 'doc-dpp-icon' : 'doc-notes-icon'}">
-        ${isDpp ? 'ðŸ“' : 'ðŸ“„'}
+        ${isDpp ? 'ðŸ“' : '📄'}
       </div>
       <div class="content-info-block">
         <div class="content-item-name">${name}</div>
         <div class="content-item-meta-row">
           <span class="content-duration-pill">${isDpp ? 'DPP PDF' : 'CLASS NOTES'}</span>
-          ${date ? `<span class="content-date-pill">ðŸ“… ${date}</span>` : ''}
+          ${date ? `<span class="content-date-pill">📅 ${date}</span>` : ''}
         </div>
       </div>
-      <div class="content-send-action-btn" title="Open or Send PDF">â†—</div>
+      <div class="content-send-action-btn" title="Open or Send PDF">↗</div>
     </div>`;
   }).join('');
 }
 
-// â”€â”€â”€ Send Content to Telegram Bot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Send Content to Telegram Bot ──────────────────────────────
 async function sendContent(keyOrItem, type) {
   if (state.isSending) return;
   state.isSending = true;
@@ -2196,13 +2210,13 @@ async function sendContent(keyOrItem, type) {
           try { state.tg.openLink(pdfUrl); } catch (e) {}
         }
       } else {
-        showToast('ðŸ“„ Notes for this lecture have not been uploaded by faculty yet');
+        showToast('📄 Notes for this lecture have not been uploaded by faculty yet');
         state.isSending = false;
         return;
       }
     } catch (err) {
       console.warn('PDF details fetch failed:', err);
-      showToast('ðŸ“„ Notes for this lecture have not been uploaded by faculty yet');
+      showToast('📄 Notes for this lecture have not been uploaded by faculty yet');
       state.isSending = false;
       return;
     }
@@ -2297,7 +2311,7 @@ async function sendContent(keyOrItem, type) {
     } else {
       if (result.forcesub) {
         await checkInAppForceSub(false);
-        showToast('ðŸ”’ Access Restricted: Please join our community first!');
+        showToast('🔒 Access Restricted: Please join our community first!');
         return;
       }
       throw new Error(result.error || 'Send failed');
@@ -2329,7 +2343,7 @@ function openActionSheet(itemId, type) {
   const nameEl = document.getElementById('action-lecture-name');
   const subEl = document.getElementById('action-lecture-sub');
   if (nameEl) nameEl.textContent = name;
-  if (subEl) subEl.textContent = sub ? `${sub} â€¢ Choose action` : 'Choose action';
+  if (subEl) subEl.textContent = sub ? `${sub} • Choose action` : 'Choose action';
 
   const overlay = document.getElementById('action-overlay');
   const sheet = document.getElementById('action-sheet');
@@ -2582,7 +2596,7 @@ function setPlaySpeed(speed) {
   document.querySelectorAll('.speed-buttons .speed-btn').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.trim() === `${speed}x`);
   });
-  showToast(`âš¡ Speed: ${speed}x`);
+  showToast(`⚡ Speed: ${speed}x`);
   resetControlsTimeout();
 }
 
@@ -2611,7 +2625,7 @@ function renderQualityOptions() {
     const isAuto = (window.hlsPlayer.currentLevel === -1);
     html += `
       <button class="quality-item ${isAuto ? 'active' : ''}" onclick="setQualityLevel(-1, 'Auto')">
-        <span>âš¡ Auto (Best)</span>
+        <span>⚡ Auto (Best)</span>
         ${isAuto ? '<span class="quality-check">âœ“</span>' : ''}
       </button>
     `;
@@ -2630,7 +2644,7 @@ function renderQualityOptions() {
     menu.innerHTML = `
       <div class="quality-menu-header">Select Video Quality</div>
       <button class="quality-item active" onclick="setQualityLevel(-1, 'Auto')">
-        <span>âš¡ Auto (Default)</span>
+        <span>⚡ Auto (Default)</span>
         <span class="quality-check">âœ“</span>
       </button>
     `;
@@ -2899,7 +2913,7 @@ function applyTheme(themeKey, notify = true) {
 
   if (notify) {
     haptic('light');
-    showToast(`âœ¨ Theme changed to ${theme.toUpperCase()}`);
+    showToast(`✨ Theme changed to ${theme.toUpperCase()}`);
   }
 }
 
@@ -2947,7 +2961,7 @@ function initPWA() {
     deferredPwaPrompt = null;
     showPWAInstallButtons(false);
     haptic('success');
-    showToast('ðŸŽ‰ \ App Installed!');
+    showToast('🎉 \ App Installed!');
   });
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -3079,7 +3093,7 @@ function renderVipStatusUI() {
 
   const statusEl = document.getElementById('ref-stat-status');
   if (statusEl) {
-    statusEl.innerHTML = isVip ? 'ðŸ‘‘ VIP Student' : 'Student';
+    statusEl.innerHTML = isVip ? '👑 VIP Student' : 'Student';
     statusEl.style.color = isVip ? 'var(--accent-gold)' : 'var(--text-primary)';
   }
 
@@ -3131,14 +3145,14 @@ function fallbackCopy(text) {
     haptic('success');
     showToast('ðŸ“‹ Unique Invite Link Copied!');
   } catch (e) {
-    showToast('âš ï¸ Could not auto-copy. Please select and copy link manually.');
+    showToast('⚠️ï¸ Could not auto-copy. Please select and copy link manually.');
   }
   document.body.removeChild(ta);
 }
 
 function shareReferralTelegram() {
   const link = userReferralData.invite_link || (state.chatId ? `' + (window.APP_CONFIG ? window.APP_CONFIG.BOT_LINK : 'https://t.me/yourstudybot') + '?start=ref_${state.chatId}` : (window.APP_CONFIG?.BOT_LINK || 'https://t.me/yourstudybot'));
-  const text = `ðŸ”¥ Join \ for free Physics Wallah, NextToppers & JEE/NEET Batches, full lecture video streaming, notes & DPPs!`;
+  const text = `🔥 Join \ for free Physics Wallah, NextToppers & JEE/NEET Batches, full lecture video streaming, notes & DPPs!`;
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
   
   if (state.tg?.openTelegramLink) {
@@ -3250,7 +3264,7 @@ async function askGuruAI() {
 
   if (!text && !guruAttachedPhotoBase64) {
     haptic('warning');
-    showToast('âš ï¸ Please enter a question or upload a photo!');
+    showToast('⚠️ï¸ Please enter a question or upload a photo!');
     inputEl?.focus();
     return;
   }
@@ -3355,7 +3369,7 @@ async function askGuruAI() {
       haptic('success');
     } else {
       haptic('error');
-      showToast(data.message || 'âš ï¸ Guru could not solve this problem. Please retry!');
+      showToast(data.message || '⚠️ï¸ Guru could not solve this problem. Please retry!');
     }
   } catch (err) {
     console.error('Guru AI solver error:', err);

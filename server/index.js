@@ -15,7 +15,7 @@ const { NewMessage } = require('telegram/events');
 const { solveDoubt } = require('./ai');
 const { getUserVipInfo, grantVipStatus, isVipUser, recordReferral } = require('./vip');
 
-// â”€â”€â”€ Global Crash Guards (Prevent server exit on unhandled errors) â”€
+// ─── Global Crash Guards (Prevent server exit on unhandled errors) ─
 process.on('unhandledRejection', (reason, promise) => {
   const msg = (reason instanceof Error) ? reason.message : String(reason);
   console.error('[UnhandledRejection] Caught & suppressed:', msg);
@@ -139,7 +139,7 @@ const {
 // Import Autonomous Dumper Module
 const { runBatchDump, cancelDump, getDumpStatus } = require('./dumper');
 
-// â”€â”€â”€ Supabase Cloud Database & In-Memory Store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Supabase Cloud Database & In-Memory Store ─────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || '';
 
@@ -153,7 +153,7 @@ let adminUsers   = new Set([SUPER_ADMIN]); // Set of Admin User IDs
 let globalStats  = { total_file_requests: 0, total_broadcasts: 0, server_started_at: Date.now() };
 let lectureIndex   = new Map(); // startParam -> { key, channel_id, message_id, file_id, file_type, caption, created_at }
 let pdfIndex       = new Map(); // attId -> { key, pdf_url, name, created_at }
-let linkPreviews   = new Map(); // lpId -> { name, subject, topic, image, pdfUrl, batchId, contentId, type, ts } â€” ephemeral (10-min TTL)
+let linkPreviews   = new Map(); // lpId -> { name, subject, topic, image, pdfUrl, batchId, contentId, type, ts } — ephemeral (10-min TTL)
 
 function isAdmin(userId) {
   if (!userId) return false;
@@ -470,7 +470,7 @@ if (BOT_TOKEN) {
     });
 }
 
-// â”€â”€â”€ Telegram Userbot Setup (For Stealth File Fetching) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Telegram Userbot Setup (For Stealth File Fetching) ───────────────────────
 const apiId = TG_API_ID;
 const apiHash = TG_API_HASH;
 const stringSession = new StringSession(SESSION_STRING);
@@ -484,14 +484,14 @@ if (SESSION_STRING) {
   });
   userbot.connect()
     .then(() => {
-      console.log('âœ… GramJS Userbot connected (Stealth Mode)');
+      console.log('✅ GramJS Userbot connected (Stealth Mode)');
       // Keep-alive: ping Telegram every 4 minutes to prevent TCP drop
       setInterval(async () => {
         try {
           if (userbot && userbot.connected) {
             await userbot.invoke(new Api.help.GetConfig());
           } else if (userbot) {
-            console.log('[KeepAlive] Userbot disconnected â€” reconnecting...');
+            console.log('[KeepAlive] Userbot disconnected — reconnecting...');
             await userbot.connect();
           }
         } catch (e) {
@@ -506,8 +506,8 @@ if (SESSION_STRING) {
 }
 
 
-// â”€â”€â”€ PW Thor CF Cookie Store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// â”€â”€â”€ PW Thor Schedule Fetcher (Anti-Bot Headers & Cookie Support) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PW Thor CF Cookie Store ────────────────────────────
+// ─── PW Thor Schedule Fetcher (Anti-Bot Headers & Cookie Support) ───────────
 function buildPwThorCookie() {
   if (process.env.PW_COOKIE) {
     return process.env.PW_COOKIE.trim();
@@ -554,7 +554,7 @@ async function fetchPwThorSchedule(batchId, subjectId, contentId) {
 
     clearTimeout(timeoutId);
     if (!res.ok) {
-      console.warn(`[PW Thor] Status ${res.status} â€” CF clearance missing/invalid.`);
+      console.warn(`[PW Thor] Status ${res.status} — CF clearance missing/invalid.`);
       return null;
     }
     const data = await res.json();
@@ -566,7 +566,7 @@ async function fetchPwThorSchedule(batchId, subjectId, contentId) {
   }
 }
 
-// â”€â”€â”€ PW Thor Schedule Proxy (CORS Bypass for browser clients) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PW Thor Schedule Proxy (CORS Bypass for browser clients) ─────────────
 app.get('/api/pwthor-schedule', async (req, res) => {
   const { BatchId, SubjectId, ContentId } = req.query;
   const data = await fetchPwThorSchedule(BatchId, SubjectId, ContentId);
@@ -578,7 +578,7 @@ app.get('/api/pwthor-schedule', async (req, res) => {
 });
 
 
-// â”€â”€â”€ Pimaxer Proxy API (a.pimaxer.in) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Pimaxer Proxy API (a.pimaxer.in) ─────────────────────────────────────────
 function proxyGet(path, retries = 2) {
   return new Promise((resolve, reject) => {
     function makeAttempt(attempt) {
@@ -666,7 +666,7 @@ function proxyGet(path, retries = 2) {
   });
 }
 
-// â”€â”€â”€ MadX API Config (For Batches, Subjects, Topics) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── MadX API Config (For Batches, Subjects, Topics) ──────────────────────────
 const MADX_BASE = 'https://core.asmultiverse.app/api/v1/pw';
 
 function getMadxHeaders() {
@@ -748,14 +748,72 @@ async function learnxpwPost(path, body) {
 }
 
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
+// MULTI-PROVIDER CONFIGURATION & HELPERS
+// ════════════════════════════════════════════════════════════════
+const AS_PROVIDERS = {
+  nexttopper: 'nt',
+  missionjeet: 'missionjeet',
+  vidyakul: 'vidyakul',
+  apnacollege: 'apnacollage',
+  sketchbook: 'sketchbook',
+};
+
+async function asmultiverseGet(provider, path) {
+  const prov = AS_PROVIDERS[provider.toLowerCase()] || provider;
+  const urls = [
+    `https://api.asmultiverse.app/api/v1/${prov}${path}`,
+    `https://core.asmultiverse.app/api/v1/${prov}${path}`
+  ];
+  let lastErr;
+  for (const url of urls) {
+    try {
+      const headers = getMadxHeaders();
+      const res = await fetch(url, { headers });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error(`Failed to fetch from AS Multiverse for ${provider}`);
+}
+
+// ════════════════════════════════════════════════════════════════
 // API PROXY ROUTES
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ════════════════════════════════════════════════════════════════
 app.get('/api/batches', async (req, res) => {
   try {
-    const userId = process.env.PW_USER_ID;
-    if (!userId) return res.status(500).json({ error: 'PW_USER_ID not configured' });
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+
+    // 1. Non-PW Multi-Providers (NextToppers, Mission JEET, Vidyakul, Apna College)
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const data = await asmultiverseGet(provKey, `/batches?page=${page}&limit=${limit}`);
+      const raw = (data.data && Array.isArray(data.data)) ? data.data : (data.data?.batches || []);
+      const normalized = raw.map(b => {
+        const bId = String(b._id || b.id || '');
+        const title = b.title || b.name || b.batchName || 'Batch';
+        let img = b.previewImage || b.image || '';
+        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
+          img = getBannerUrl();
+        }
+        return {
+          _id: bId,
+          id: bId,
+          name: title,
+          title: title,
+          previewImage: img,
+          image: img,
+          class: b.class || ''
+        };
+      });
+      return res.json({ success: true, data: normalized });
+    }
+
+    // 2. Physics Wallah (PW) Provider with safe default userId
+    const userId = process.env.PW_USER_ID || '6a429c85c07e44cc78e146e7';
     const response = await madxGet(`/mybatches/${userId}/details?page=${page}&limit=${limit}`);
     
     // Sort with Arjuna JEE 2.0 2027 #1, followed by 2027 batches, then by year
@@ -780,33 +838,122 @@ app.get('/api/batches', async (req, res) => {
       });
     }
     res.json(response);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('[Batches Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/batches/search', async (req, res) => {
   try {
-    const userId = process.env.PW_USER_ID;
-    if (!userId) return res.status(500).json({ error: 'PW_USER_ID not configured' });
-    const { q } = req.query;
+    const { q, provider = 'pw' } = req.query;
     if (!q) return res.status(400).json({ error: 'Missing q' });
-    
-    // The MadX API ignores the search query param, so we fetch a large batch and filter manually
+    const provKey = String(provider).toLowerCase();
+
+    // Multi-provider search
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const data = await asmultiverseGet(provKey, `/batches?page=1&limit=100`);
+      const raw = (data.data && Array.isArray(data.data)) ? data.data : (data.data?.batches || []);
+      const query = q.toLowerCase();
+      const matches = raw.filter(b => {
+        const title = (b.title || b.name || b.batchName || '').toLowerCase();
+        return title.includes(query);
+      }).map(b => {
+        const bId = String(b._id || b.id || '');
+        const title = b.title || b.name || b.batchName || 'Batch';
+        let img = b.previewImage || b.image || '';
+        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
+          img = getBannerUrl();
+        }
+        return {
+          _id: bId,
+          id: bId,
+          name: title,
+          title: title,
+          previewImage: img,
+          image: img,
+          class: b.class || ''
+        };
+      });
+      return res.json({ success: true, data: matches });
+    }
+
+    const userId = process.env.PW_USER_ID || '6a429c85c07e44cc78e146e7';
     const response = await madxGet(`/mybatches/${userId}/details?page=1&limit=200`);
     if (response.data && Array.isArray(response.data)) {
       const query = q.toLowerCase();
       response.data = response.data.filter(b => b.name && b.name.toLowerCase().includes(query));
     }
     res.json(response);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    console.error('[Search Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/batch/:batchId/details', async (req, res) => {
-  try { res.json(await madxGet(`/batches/${req.params.batchId}/details`)); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const { provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    const batchId = req.params.batchId;
+
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      const data = await asmultiverseGet(provKey, `/batch/${batchId}/details`);
+      const subjects = (data.data?.subjects || data.data || []);
+      const normalized = (Array.isArray(subjects) ? subjects : []).map(s => {
+        const sId = String(s._id || s.id || '');
+        const title = s.title || s.subject || s.subjectName || 'Subject';
+        const vCount = s.totalVideos || s.lectureCount || 0;
+        const nCount = s.totalNotes || 0;
+        let img = s.image || s.imageId || '';
+        if (!img || img.includes('asmultiverse') || img.includes('ibb.co')) {
+          img = getBannerUrl();
+        }
+        return {
+          _id: sId,
+          id: sId,
+          subject: title,
+          title: title,
+          lectureCount: vCount,
+          totalVideos: vCount,
+          totalNotes: nCount,
+          imageId: img,
+          image: img
+        };
+      });
+      return res.json({ success: true, data: { _id: batchId, subjects: normalized } });
+    }
+
+    res.json(await madxGet(`/batches/${batchId}/details`));
+  } catch (err) {
+    console.error('[Batch Details Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Topics list — learnxpw.site /api/SubjectInfo (paginated)
-// Supports page param. Stops when data:[] returned.
+app.get('/api/batch/:batchId/subject/:subjectId/content/:contentId/details', async (req, res) => {
+  try {
+    const { provider = 'pw' } = req.query;
+    const provKey = String(provider).toLowerCase();
+    const { batchId, subjectId, contentId } = req.params;
+
+    if (provKey !== 'pw' && AS_PROVIDERS[provKey]) {
+      try {
+        const data = await asmultiverseGet(provKey, `/batches/${batchId}/subjects/${subjectId}/contents/${contentId}/details`);
+        return res.json(data);
+      } catch (e) {
+        const data = await asmultiverseGet(provKey, `/batch/${batchId}/subject/${subjectId}/content/${contentId}/details`);
+        return res.json(data);
+      }
+    }
+
+    res.json({ success: true, data: { _id: contentId } });
+  } catch (err) {
+    console.error('[Content Details Error]:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/batch/:batchId/subject/:subjectId/topics', async (req, res) => {
   try {
     const { page = 1 } = req.query;
@@ -907,7 +1054,7 @@ app.get('/api/batch/:batchId/subject/:subjectSlug/content', async (req, res) => 
 
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// LINK PREVIEW STORE  â€” ephemeral metadata for browser deep-links
+// LINK PREVIEW STORE  — ephemeral metadata for browser deep-links
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 app.post('/api/link-preview', (req, res) => {
   const { name, subject, topic, image, pdfUrl, batchId, contentId, type } = req.body || {};
@@ -945,7 +1092,7 @@ app.post('/bot/send', async (req, res) => {
     const isVideo = type === 'Videos' || type === 'DppVideos';
     console.log(`[/bot/send] type=${type} isVideo=${isVideo} pdfUrl=${!!pdfUrl} contentId=${contentId}`);
 
-    // â”€â”€â”€ NOTES / DPP: Send directly via static.pw.live URL â”€â”€â”€
+    // ─── NOTES / DPP: Send directly via static.pw.live URL ───
     if (!isVideo) {
       if (pdfUrl) {
         await sendPdfDirect(chatId, { pdfUrl, name, subject, topic, type, batchId, contentId });
@@ -958,7 +1105,7 @@ app.post('/bot/send', async (req, res) => {
       return res.json({ success: true });
     }
 
-    // â”€â”€â”€ VIDEOS: Use delivery bot (asmultiverse) â”€â”€â”€
+    // ─── VIDEOS: Use delivery bot (asmultiverse) ───
     if (!batchId || !contentId) return res.status(400).json({ error: 'Video: missing batchId/contentId' });
 
     let finalHomeworks = Array.isArray(homeworks) ? homeworks.filter(hw => Array.isArray(hw?.attachmentIds) && hw.attachmentIds.length > 0) : [];
@@ -1024,12 +1171,12 @@ function getCaption(isVideo, { name, subject, topic }) {
   }
 }
 
-// â”€â”€â”€ Send Video Quality Selection Message â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Send Video Quality Selection Message ─────────────────────
 async function sendVideoQualitySelection(chatId, info) {
   const qualities = ['720p', '480p', '360p', '240p'];
   const caption = getCaption(true, info) +
-    `ðŸ“Š *Available:* ${qualities.join(', ')}\n\n` +
-    `ðŸ‘‡ *Click a button to get the video*`;
+    `📊 *Available:* ${qualities.join(', ')}\n\n` +
+    `👇 *Click a button to get the video*`;
 
   const qualityButtons = [];
   for (let i = 0; i < qualities.length; i += 2) {
@@ -1038,7 +1185,7 @@ async function sendVideoQualitySelection(chatId, info) {
       const q = qualities[j].replace('p', ''); 
       // Instead of direct URL, use callback to trigger Userbot
       row.push({
-        text: `${qualities[j]} â†—ï¸`,
+        text: `${qualities[j]} ↗ï¸`,
         callback_data: `v_${info.batchId}_${info.contentId}_${q}`
       });
     }
@@ -1048,12 +1195,12 @@ async function sendVideoQualitySelection(chatId, info) {
   // Attach Homework / Notes inline buttons
   const validHomeworks = (info.homeworks || []).filter(hw => (Array.isArray(hw?.attachmentIds) && hw.attachmentIds.length > 0) || hw?._id);
   if (validHomeworks.length > 0) {
-    qualityButtons.push([{ text: 'â¬‡ï¸ Class Notes â¬‡ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ï¸ Class Notes ⬇️ï¸', callback_data: 'noop' }]);
     validHomeworks.forEach(hw => {
       const att = (Array.isArray(hw?.attachmentIds) && hw.attachmentIds[0]) || hw || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `ðŸ“„ ${hw.topic || att.name || 'Notes'} â†—ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'} ↗ï¸`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || hw._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1067,19 +1214,19 @@ async function sendVideoQualitySelection(chatId, info) {
           });
         }
       } else {
-        qualityButtons.push([{ text: `ðŸ“„ ${hw.topic || att.name || 'Notes'}`, callback_data: `n_${info.batchId}_${att._id || hw._id}` }]);
+        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'}`, callback_data: `n_${info.batchId}_${att._id || hw._id}` }]);
       }
     });
   }
 
   const validDpps = (info.dpps || []).filter(dpp => (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds.length > 0) || dpp?._id);
   if (validDpps.length > 0) {
-    qualityButtons.push([{ text: 'â¬‡ï¸ DPPs â¬‡ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ï¸ DPPs ⬇️ï¸', callback_data: 'noop' }]);
     validDpps.forEach(dpp => {
       const att = (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds[0]) || dpp || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'} â†—ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || dpp._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1098,7 +1245,7 @@ async function sendVideoQualitySelection(chatId, info) {
     });
   }
 
-  qualityButtons.push([{ text: 'Close ðŸ”’', callback_data: 'close_msg' }]);
+  qualityButtons.push([{ text: 'Close 🔒', callback_data: 'close_msg' }]);
 
   const replyMarkup = { inline_keyboard: qualityButtons };
   
@@ -1113,10 +1260,10 @@ async function sendVideoQualitySelection(chatId, info) {
   await bot.sendMessage(chatId, caption, { parse_mode: 'Markdown', reply_markup: replyMarkup });
 }
 
-// â”€â”€â”€ Send PDF/Notes Direct â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Send PDF/Notes Direct ────────────────────────────────────
 async function sendPdfDirect(chatId, info) {
   const isDpp    = info.type === 'DppNotes';
-  const emoji    = isDpp ? 'ðŸ“' : 'ðŸ“„';
+  const emoji    = isDpp ? 'ðŸ“' : '📄';
   const label    = isDpp ? 'DPP PDF' : 'Class Notes';
   const caption  = getCaption(false, info);
 
@@ -1126,15 +1273,15 @@ async function sendPdfDirect(chatId, info) {
 
   if (!pdfUrl && cacheKey && pdfIndex.has(cacheKey)) {
     pdfUrl = pdfIndex.get(cacheKey).pdf_url;
-    console.log(`[sendPdfDirect] âš¡ Cache HIT for ${cacheKey}`);
+    console.log(`[sendPdfDirect] ⚡ Cache HIT for ${cacheKey}`);
   }
 
   if (pdfUrl) {
     console.log(`[sendPdfDirect] Sending PDF as URL button: ${pdfUrl}`);
     const replyMarkup = {
       inline_keyboard: [
-        [{ text: `${emoji} Open ${label} â†—ï¸`, url: pdfUrl }],
-        [{ text: 'Close ðŸ”’', callback_data: 'close_msg' }]
+        [{ text: `${emoji} Open ${label} ↗ï¸`, url: pdfUrl }],
+        [{ text: 'Close 🔒', callback_data: 'close_msg' }]
       ]
     };
     await bot.sendMessage(chatId, caption, {
@@ -1158,12 +1305,12 @@ async function sendPdfDirect(chatId, info) {
     return;
   }
 
-  // â”€ Fallback: show a delivery-bot button (when no URL available) â”€
+  // ─ Fallback: show a delivery-bot button (when no URL available) ─
   console.log(`[sendPdfDirect] Fallback button: batchId=${info.batchId} contentId=${info.contentId}`);
   const replyMarkup = {
     inline_keyboard: [
-      [{ text: `${emoji} Get ${label} â†—ï¸`, callback_data: `n_${info.batchId}_${info.contentId}` }],
-      [{ text: 'Close ðŸ”’', callback_data: 'close_msg' }]
+      [{ text: `${emoji} Get ${label} ↗ï¸`, callback_data: `n_${info.batchId}_${info.contentId}` }],
+      [{ text: 'Close 🔒', callback_data: 'close_msg' }]
     ]
   };
   await bot.sendMessage(chatId, caption, { parse_mode: 'Markdown', reply_markup: replyMarkup, disable_web_page_preview: true });
@@ -1183,7 +1330,7 @@ const fetchQueue = [];
 let isFetching = false;
 const pendingRequests = new Map(); // requestId -> { chatId, caption, type, statusMsgId }
 
-// â”€â”€â”€ Queue Manager (Auto-Wait & Seamless Retry on Cooldown) â”€â”€â”€
+// ─── Queue Manager (Auto-Wait & Seamless Retry on Cooldown) ───
 async function processFetchQueue() {
   if (isFetching || fetchQueue.length === 0) return;
   isFetching = true;
@@ -1203,7 +1350,7 @@ async function processFetchQueue() {
         console.log(`â³ [Cooldown Detected] Source server asked to wait ${secs}s. Pausing queue and auto-retrying...`);
         const pending = pendingRequests.get(req.reqId);
         if (pending && pending.statusMsgId && bot) {
-          bot.editMessageText(`â³ *Please wait ${secs}s â€” auto-fetching your file...*`, {
+          bot.editMessageText(`â³ *Please wait ${secs}s — auto-fetching your file...*`, {
             chat_id: pending.chatId,
             message_id: pending.statusMsgId,
             parse_mode: 'Markdown'
@@ -1242,13 +1389,13 @@ async function enqueueFetch(chatId, startParam, customCaption, type, statusMsgId
       return;
     }
   }
-  // â”€â”€â”€ 1. Check Local In-Memory / Channel Cache (0.1s Instant Hit) â”€â”€â”€
+  // ─── 1. Check Local In-Memory / Channel Cache (0.1s Instant Hit) ───
   const cached = lectureIndex.get(startParam);
   if (cached) {
     // 1a. Try copyMessage from dump channel if message_id exists
     if (cached.message_id && cached.channel_id && bot) {
       try {
-        console.log(`âš¡ [Index HIT] Delivering ${startParam} directly from dump channel message #${cached.message_id}...`);
+        console.log(`⚡ [Index HIT] Delivering ${startParam} directly from dump channel message #${cached.message_id}...`);
         await bot.copyMessage(chatId, cached.channel_id, cached.message_id, {
           caption: truncateCaption(customCaption),
           parse_mode: 'Markdown'
@@ -1264,7 +1411,7 @@ async function enqueueFetch(chatId, startParam, customCaption, type, statusMsgId
     // 1b. Direct Telegram file_id send (0.1s Instant delivery!)
     if (cached.file_id && bot) {
       try {
-        console.log(`âš¡ [Index HIT] Delivering ${startParam} directly via cached file_id...`);
+        console.log(`⚡ [Index HIT] Delivering ${startParam} directly via cached file_id...`);
         const sendMethod = (cached.file_type === 'video' || type === 'video') ? bot.sendVideo.bind(bot) : bot.sendDocument.bind(bot);
         await sendMethod(chatId, cached.file_id, {
           caption: truncateCaption(customCaption),
@@ -1279,25 +1426,25 @@ async function enqueueFetch(chatId, startParam, customCaption, type, statusMsgId
     }
   }
 
-  // â”€â”€â”€ 2. Cache Miss: Enqueue Userbot Remote Fetch â”€â”€â”€
+  // ─── 2. Cache Miss: Enqueue Userbot Remote Fetch ───
   const reqId = Date.now().toString() + Math.random().toString(36).substring(7);
   pendingRequests.set(reqId, { chatId, caption: truncateCaption(customCaption), type, statusMsgId, startParam });
   fetchQueue.push({ reqId, startParam });
   processFetchQueue();
 }
 
-// â”€â”€â”€ Ensure Userbot is Connected â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Ensure Userbot is Connected ─────────────────────────────
 async function ensureConnected() {
   if (!userbot) throw new Error('Userbot not initialized');
   if (!userbot.connected) {
-    console.log('[Fetch] Userbot not connected â€” reconnecting before fetch...');
+    console.log('[Fetch] Userbot not connected — reconnecting before fetch...');
     await userbot.connect();
     // Small delay after reconnect to let auth settle
     await new Promise(r => setTimeout(r, 1500));
   }
 }
 
-// â”€â”€â”€ GramJS Fetch Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── GramJS Fetch Logic ───────────────────────────────────────
 async function performFetch({ reqId, startParam }) {
   if (!userbot) throw new Error("Userbot is not initialized! Run auth.js");
   if (!botUsername) throw new Error("Regular bot username not resolved yet");
@@ -1306,7 +1453,7 @@ async function performFetch({ reqId, startParam }) {
   await ensureConnected();
 
   return new Promise((resolve, reject) => {
-    // Timeout handler â€” 60s for slow Render cold starts
+    // Timeout handler — 60s for slow Render cold starts
     const timeout = setTimeout(() => {
        userbot.removeEventHandler(handler, new NewMessage({ fromUsers: [DELIVERY_BOT] }));
        reject(new Error("Timeout waiting for remote server response"));
@@ -1372,21 +1519,21 @@ async function performFetch({ reqId, startParam }) {
 }
 
 
-// â”€â”€â”€ Admin Dashboard & Live Batch Dump Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Admin Dashboard & Live Batch Dump Engine ─────────────────
 function getAdminDashboardText() {
   const dumpStatus = getDumpStatus();
-  return `ðŸ›¡ï¸ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
+  return `🛡️ï¸ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-         `ðŸ‘‘ *Super Admin:* \`${SUPER_ADMIN}\`\n` +
-         `ðŸ‘¥ *Admin Count:* \`${adminUsers.size}\`\n` +
-         `ðŸ‘¥ *Total Bot Users:* \`${knownUsers.size}\`\n` +
-         `ðŸ“¥ *Total Files Sent:* \`${globalStats.total_file_requests}\`\n` +
-         `ðŸ’¾ *Indexed Local Lectures:* \`${lectureIndex.size}\` items\n` +
-         `ðŸ“¦ *Primary Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-         `ðŸ›¡ï¸ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
-         `âš™ï¸ *Auto-Dumper Status:* ${dumpStatus.isRunning ? 'ðŸŸ¡ `RUNNING`' : 'ðŸŸ¢ `IDLE`'}\n` +
+         `👑 *Super Admin:* \`${SUPER_ADMIN}\`\n` +
+         `👥 *Admin Count:* \`${adminUsers.size}\`\n` +
+         `👥 *Total Bot Users:* \`${knownUsers.size}\`\n` +
+         `📥 *Total Files Sent:* \`${globalStats.total_file_requests}\`\n` +
+         `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\` items\n` +
+         `📦 *Primary Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
+         `🛡️ï¸ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+         `âš™ï¸ *Auto-Dumper Status:* ${dumpStatus.isRunning ? '🟡 `RUNNING`' : '🟢 `IDLE`'}\n` +
          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-         `ðŸ‘‡ _Select an administrative action below:_`;
+         `👇 _Select an administrative action below:_`;
 }
 
 function getAdminKeyboard() {
@@ -1394,16 +1541,16 @@ function getAdminKeyboard() {
   return {
     inline_keyboard: [
       [
-        { text: 'ðŸ“Š Live Analytics', callback_data: 'adm_stats' },
-        { text: dumpStatus.isRunning ? 'â³ Dump Running...' : 'ðŸš€ Start Batch Dump', callback_data: 'adm_start_dump' }
+        { text: '📊 Live Analytics', callback_data: 'adm_stats' },
+        { text: dumpStatus.isRunning ? 'â³ Dump Running...' : '🚀 Start Batch Dump', callback_data: 'adm_start_dump' }
       ],
       [
-        { text: 'ðŸ›‘ Stop Dump', callback_data: 'adm_stop_dump' },
-        { text: 'ðŸ‘¥ List Admins', callback_data: 'adm_list_admins' }
+        { text: '🛑 Stop Dump', callback_data: 'adm_stop_dump' },
+        { text: '👥 List Admins', callback_data: 'adm_list_admins' }
       ],
       [
-        { text: 'ðŸ“¦ Storage Info', callback_data: 'adm_storage_info' },
-        { text: 'ðŸ”„ Refresh Panel', callback_data: 'adm_refresh' }
+        { text: '📦 Storage Info', callback_data: 'adm_storage_info' },
+        { text: '🔄 Refresh Panel', callback_data: 'adm_refresh' }
       ],
       [
         { text: 'âŒ Close Panel', callback_data: 'close_msg' }
@@ -1416,14 +1563,14 @@ let liveDumpJob = { isRunning: false, msgId: null, chatId: null, lastUpdate: 0 }
 
 async function triggerBatchDumpFlow(targetChatId) {
   if (getDumpStatus().isRunning || liveDumpJob.isRunning) {
-    return bot.sendMessage(targetChatId, 'âš ï¸ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
+    return bot.sendMessage(targetChatId, '⚠️ï¸ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
   }
 
   liveDumpJob.isRunning = true;
   liveDumpJob.chatId = targetChatId;
   const statusMsg = await bot.sendMessage(
     targetChatId,
-    `ðŸš€ *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\nâ³ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
+    `🚀 *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\nâ³ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
     { parse_mode: 'Markdown' }
   );
   liveDumpJob.msgId = statusMsg.message_id;
@@ -1436,15 +1583,15 @@ async function triggerBatchDumpFlow(targetChatId) {
 
     try {
       const waitNotice = p.isWait ? `\nâ³ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
-      const text = `ðŸš€ *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
+      const text = `🚀 *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
                    `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                   `ðŸ“š *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
+                   `📚 *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
                    `ðŸ“– *Subject:* \`${escMd(p.subjectName || 'Scanning...')}\`\n` +
-                   `ðŸš© *Chapter:* \`${escMd(p.topicName || 'Scanning...')}\`\n` +
-                   `ðŸ“¥ *New Dumped:* \`${p.totalDumped || 0}\`\n` +
+                   `🚩 *Chapter:* \`${escMd(p.topicName || 'Scanning...')}\`\n` +
+                   `📥 *New Dumped:* \`${p.totalDumped || 0}\`\n` +
                    `â­ï¸ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
-                   `ðŸ’¾ *Total Archive Size:* \`${p.totalArchiveSize || lectureIndex.size}\`\n` +
-                   `ðŸ“¦ *Channel:* \`${DUMP_CHANNEL_ID}\`` +
+                   `💾 *Total Archive Size:* \`${p.totalArchiveSize || lectureIndex.size}\`\n` +
+                   `📦 *Channel:* \`${DUMP_CHANNEL_ID}\`` +
                    waitNotice;
 
       await bot.editMessageText(text, {
@@ -1461,24 +1608,24 @@ async function triggerBatchDumpFlow(targetChatId) {
 
     let failedDetails = '';
     if (summary.totalFailed > 0 && Array.isArray(summary.failedItems)) {
-      failedDetails = `\n\nâš ï¸ *Failed / Missed Items (${summary.totalFailed}):*\n` +
+      failedDetails = `\n\n⚠️ï¸ *Failed / Missed Items (${summary.totalFailed}):*\n` +
                       summary.failedItems.map((f, i) => `${i + 1}. \`${escMd(f.meta?.name || f.startParam)}\` (${f.reason || 'error'})`).join('\n');
     }
 
     const failedLine = summary.totalFailed === 0 
-      ? `âŒ *Failed / Missed:* \`0 (100% Success â€” Zero Errors!)\` âœ…`
+      ? `âŒ *Failed / Missed:* \`0 (100% Success — Zero Errors!)\` ✅`
       : `âŒ *Failed / Missed:* \`${summary.totalFailed}\``;
 
-    const completionMsg = `ðŸŽ‰ *BATCH DUMP & ARCHIVE COMPLETED!*\n` +
+    const completionMsg = `🎉 *BATCH DUMP & ARCHIVE COMPLETED!*\n` +
                           `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                          `ðŸ“¥ *Total New Dumped:* \`${summary.totalDumped}\`\n` +
+                          `📥 *Total New Dumped:* \`${summary.totalDumped}\`\n` +
                           `â­ï¸ *Already in Cache:* \`${summary.totalSkipped}\`\n` +
                           `${failedLine}\n` +
-                          `ðŸ“Š *Total Archive Database:* \`${summary.totalArchiveSize}\` items\n` +
+                          `📊 *Total Archive Database:* \`${summary.totalArchiveSize}\` items\n` +
                           `â±ï¸ *Time Taken:* \`${summary.durationStr}\`\n` +
-                          `ðŸ“¦ *Primary Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                          `ðŸ›¡ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
-                          `âš¡ *Status:* 100% Synced & Ready for 0.1s Fast Delivery!` +
+                          `📦 *Primary Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
+                          `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                          `⚡ *Status:* 100% Synced & Ready for 0.1s Fast Delivery!` +
                           failedDetails;
 
     await bot.sendMessage(targetChatId, completionMsg, { parse_mode: 'Markdown' });
@@ -1523,7 +1670,7 @@ app.post('/webhook', (req, res) => {
 });
 
 if (bot) {
-  // â”€â”€â”€ Inline Button Clicks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Inline Button Clicks ───────────────────
   bot.on('callback_query', async (q) => {
     const data = q.data;
     
@@ -1532,10 +1679,10 @@ if (bot) {
       return bot.answerCallbackQuery(q.id);
     }
 
-    // â”€â”€â”€ Admin Interactive Callback Queries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Admin Interactive Callback Queries ─────────────────
     if (data.startsWith('adm_')) {
       if (!isAdmin(q.from.id)) {
-        return bot.answerCallbackQuery(q.id, { text: 'â›” Unauthorized: Admin only!', show_alert: true });
+        return bot.answerCallbackQuery(q.id, { text: '⛔ Unauthorized: Admin only!', show_alert: true });
       }
       await bot.answerCallbackQuery(q.id);
 
@@ -1581,11 +1728,11 @@ if (bot) {
       }
 
       if (data === 'adm_storage_info') {
-        const storageMsg = `ðŸ“¦ *Telegram Storage Channels Status*\n` +
+        const storageMsg = `📦 *Telegram Storage Channels Status*\n` +
                            `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                            `ðŸ“ *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
-                           `ðŸ›¡ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
-                           `ðŸ’¾ *Total Indexed Files:* \`${lectureIndex.size}\` items\n` +
+                           `🛡️ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                           `💾 *Total Indexed Files:* \`${lectureIndex.size}\` items\n` +
                            `â˜ï¸ *Cloud Database:* \`Supabase PostgreSQL\``;
         return bot.sendMessage(q.message.chat.id, storageMsg, { parse_mode: 'Markdown' });
       }
@@ -1636,12 +1783,12 @@ if (bot) {
         const cachedPdf = pdfIndex.get(contentIdPart) || pdfIndex.get(startParam);
         if (cachedPdf && cachedPdf.pdf_url) {
           if (loadingMsg) await bot.deleteMessage(q.message.chat.id, loadingMsg.message_id).catch(() => {});
-          await bot.sendMessage(q.message.chat.id, `ðŸ“„ *${escMd(cachedPdf.name || 'Class Notes / DPP')}*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, {
+          await bot.sendMessage(q.message.chat.id, `📄 *${escMd(cachedPdf.name || 'Class Notes / DPP')}*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, {
             parse_mode: 'Markdown',
             reply_markup: {
               inline_keyboard: [
-                [{ text: 'ðŸ“„ Open PDF â†—ï¸', url: cachedPdf.pdf_url }],
-                [{ text: 'Close ðŸ”’', callback_data: 'close_msg' }]
+                [{ text: '📄 Open PDF ↗ï¸', url: cachedPdf.pdf_url }],
+                [{ text: 'Close 🔒', callback_data: 'close_msg' }]
               ]
             }
           });
@@ -1652,7 +1799,7 @@ if (bot) {
 
       let finalCaption = q.message.caption || q.message.text || '';
       if (isVideo) {
-         finalCaption = finalCaption.split('ðŸ“Š')[0].trim();
+         finalCaption = finalCaption.split('📊')[0].trim();
          finalCaption += `\n\n🎬 *Quality:* ${qualityPart}p\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`;
       }
 
@@ -1660,7 +1807,7 @@ if (bot) {
     }
   });
 
-  // â”€â”€â”€ Incoming Messages (Userbot -> Regular Bot) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Incoming Messages (Userbot -> Regular Bot) ───────────
   bot.on('message', async (msg) => {
     // Track every user interacting with the bot
     if (msg.from && (!SUPPORT_GID || String(msg.chat.id) !== String(SUPPORT_GID))) {
@@ -1713,7 +1860,7 @@ if (bot) {
           const lpId = payload.slice(3);
           const lp   = linkPreviews.get(lpId);
           if (!lp) {
-            // Metadata expired or invalid â€” just open the webapp
+            // Metadata expired or invalid — just open the webapp
             return bot.sendMessage(chatId,
               `⚡ *Hey ${escMd(name)}!*\n\n🎓 *${escMd(BRAND.BOT_NAME)}* — that content link has expired.\n\nPlease open the webapp and tap the lecture again.`,
               { parse_mode: 'Markdown', reply_markup: WEBAPP_URL ? { inline_keyboard: [[{ text: `🚀 Open ${BRAND.BOT_NAME}`, web_app: { url: WEBAPP_URL } }]] } : undefined }
@@ -1739,7 +1886,7 @@ if (bot) {
           }
 
           if (!isVideo && lp.contentId) {
-            // Notes without URL â€” check cache or enqueue
+            // Notes without URL — check cache or enqueue
             const cachedPdf = pdfIndex.get(lp.contentId);
             if (cachedPdf && cachedPdf.pdf_url) {
               await sendPdfDirect(chatId, {
@@ -1759,7 +1906,7 @@ if (bot) {
             return;
           }
 
-          // Video â€” send quality menu with real metadata including homework/DPP fetch
+          // Video — send quality menu with real metadata including homework/DPP fetch
           let finalHomeworks = [];
           let finalDpps = [];
           if (lp.batchId && lp.subject && lp.contentId) {
@@ -1785,7 +1932,7 @@ if (bot) {
           return;
         }
 
-        // â”€â”€â”€ Legacy payloads (no metadata store) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ─── Legacy payloads (no metadata store) ──────────────────
         const isNote = payload.startsWith('n_');
         const cleanPayload = (payload.startsWith('v_') || payload.startsWith('n_')) ? payload.slice(2) : payload;
         const parts = cleanPayload.split('_');
@@ -1860,7 +2007,7 @@ if (bot) {
               trackFileRequest(pending.chatId);
             }
 
-            // â”€â”€â”€ Background Auto-Dump into Private Channel & Supabase â”€â”€â”€
+            // ─── Background Auto-Dump into Private Channel & Supabase ───
             if (pending.startParam) {
               (async () => {
                 const tag = `#PW_${pending.startParam}`;
@@ -1878,7 +2025,7 @@ if (bot) {
                     });
                     if (dumpMsg && dumpMsg.message_id) {
                       dumpMsgId = dumpMsg.message_id;
-                      console.log(`ðŸ’¾ [Dump Channel] Saved #${dumpMsgId} for ${tag}`);
+                      console.log(`💾 [Dump Channel] Saved #${dumpMsgId} for ${tag}`);
                     }
                   } catch (chErr) {
                     console.warn('[Dump Channel] Post error:', chErr.message);
@@ -1895,7 +2042,7 @@ if (bot) {
                   caption: truncateCaption(pending.caption),
                   created_at: new Date().toISOString()
                 });
-                console.log(`ðŸ’¾ [Auto-Saved to Index & Supabase] Tag: ${tag} | Msg #${dumpMsgId || 'None'} | RAM Index: ${lectureIndex.size}`);
+                console.log(`💾 [Auto-Saved to Index & Supabase] Tag: ${tag} | Msg #${dumpMsgId || 'None'} | RAM Index: ${lectureIndex.size}`);
 
                 // 3. Mirror to Secondary Backup Channel (Async Zero Delay)
                 if (BACKUP_CHANNEL_ID) {
@@ -1905,7 +2052,7 @@ if (bot) {
                   }).catch(() => {
                     sendMethod(BACKUP_CHANNEL_ID, fileId, { caption: truncateCaption(dumpCaption) }).catch(() => {});
                   });
-                  console.log(`ðŸ›¡ï¸ [Mirrored to Backup Channel] Tag: ${tag}`);
+                  console.log(`🛡️ï¸ [Mirrored to Backup Channel] Tag: ${tag}`);
                 }
               })();
             }
@@ -1935,33 +2082,33 @@ if (bot) {
       if (txt === '/stopdump' || txt === '/canceldump') {
         const stopped = cancelDump();
         if (stopped) {
-          return bot.sendMessage(msg.chat.id, 'ðŸ›‘ *Batch Dump Cancelled.*', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, '🛑 *Batch Dump Cancelled.*', { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, 'â„¹ï¸ *No active dump is currently running.*', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, 'ℹ️ï¸ *No active dump is currently running.*', { parse_mode: 'Markdown' });
         }
       }
 
       // /addadmin <userId> (Super Admin only)
       if (txt.startsWith('/addadmin ')) {
         if (msg.from.id !== SUPER_ADMIN) {
-          return bot.sendMessage(msg.chat.id, 'â›” Only the *Super Admin* can add new admins.', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can add new admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
         if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/addadmin 123456789`', { parse_mode: 'Markdown' });
         addAdminUser(targetId);
-        return bot.sendMessage(msg.chat.id, `âœ… User \`${targetId}\` is now an *Authorized Admin*!`, { parse_mode: 'Markdown' });
+        return bot.sendMessage(msg.chat.id, `✅ User \`${targetId}\` is now an *Authorized Admin*!`, { parse_mode: 'Markdown' });
       }
 
       // /removeadmin <userId> (Super Admin only)
       if (txt.startsWith('/removeadmin ')) {
         if (msg.from.id !== SUPER_ADMIN) {
-          return bot.sendMessage(msg.chat.id, 'â›” Only the *Super Admin* can remove admins.', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can remove admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
         if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/removeadmin 123456789`', { parse_mode: 'Markdown' });
         const res = removeAdminUser(targetId);
         if (res) {
-          return bot.sendMessage(msg.chat.id, `âœ… Admin \`${targetId}\` has been removed.`, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `✅ Admin \`${targetId}\` has been removed.`, { parse_mode: 'Markdown' });
         } else {
           return bot.sendMessage(msg.chat.id, `âŒ Cannot remove Super Admin.`, { parse_mode: 'Markdown' });
         }
@@ -1969,8 +2116,8 @@ if (bot) {
 
       // /admins
       if (txt === '/admins') {
-        const list = Array.from(adminUsers).map((id, i) => `${i + 1}. \`${id}\`${id === SUPER_ADMIN ? ' (ðŸ‘‘ Super Admin)' : ''}`).join('\n');
-        return bot.sendMessage(msg.chat.id, `ðŸ‘¥ *Authorized Admins List:*\n\n${list}\n\n_Use /addadmin <id> or /removeadmin <id> to manage._`, { parse_mode: 'Markdown' });
+        const list = Array.from(adminUsers).map((id, i) => `${i + 1}. \`${id}\`${id === SUPER_ADMIN ? ' (👑 Super Admin)' : ''}`).join('\n');
+        return bot.sendMessage(msg.chat.id, `👥 *Authorized Admins List:*\n\n${list}\n\n_Use /addadmin <id> or /removeadmin <id> to manage._`, { parse_mode: 'Markdown' });
       }
 
       // /check <key>
@@ -1978,7 +2125,7 @@ if (bot) {
         const key = txt.split(' ')[1].trim();
         const cached = lectureIndex.get(key);
         if (cached) {
-          return bot.sendMessage(msg.chat.id, `âœ… *Lecture Cached in Local Archive!*\n\nðŸ”‘ *Key:* \`${key}\`\nðŸ“¦ *Channel:* \`${cached.channel_id}\`\nðŸ’¬ *Message ID:* \`#${cached.message_id}\`\nðŸ“¹ *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
         } else {
           return bot.sendMessage(msg.chat.id, `âŒ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
         }
@@ -1992,7 +2139,7 @@ if (bot) {
         const uids = Array.from(knownUsers.keys());
         for (const uid of uids) {
           try {
-            await bot.sendMessage(uid, 'ðŸ“¢ *Announcement*\n\n' + escMd(bMsg), { parse_mode: 'Markdown' });
+            await bot.sendMessage(uid, '📢 *Announcement*\n\n' + escMd(bMsg), { parse_mode: 'Markdown' });
             ok++;
           } catch (_) {
             fail++;
@@ -2008,7 +2155,7 @@ if (bot) {
           updated_at: new Date().toISOString()
         }, 'resolution=merge-duplicates');
 
-        return bot.sendMessage(msg.chat.id, `âœ… Broadcast complete!\n\nðŸ“¤ Sent: ${ok}\nâŒ Failed: ${fail}`);
+        return bot.sendMessage(msg.chat.id, `✅ Broadcast complete!\n\n📤 Sent: ${ok}\nâŒ Failed: ${fail}`);
       }
 
       // /ban <userId>
@@ -2016,7 +2163,7 @@ if (bot) {
         const uid = parseInt(txt.split(' ')[1]);
         if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /ban 123456789');
         setBanStatus(uid, true);
-        return bot.sendMessage(msg.chat.id, `ðŸš« User \`${uid}\` has been banned.`);
+        return bot.sendMessage(msg.chat.id, `🚫 User \`${uid}\` has been banned.`);
       }
 
       // /unban <userId>
@@ -2024,7 +2171,7 @@ if (bot) {
         const uid = parseInt(txt.split(' ')[1]);
         if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /unban 123456789');
         setBanStatus(uid, false);
-        return bot.sendMessage(msg.chat.id, `âœ… User \`${uid}\` has been unbanned.`);
+        return bot.sendMessage(msg.chat.id, `✅ User \`${uid}\` has been unbanned.`);
       }
 
       // /stats
@@ -2049,22 +2196,22 @@ if (bot) {
 
         let recentUsersText = '';
         if (userList.length > 0) {
-          recentUsersText = '\n\n*ðŸ•’ Recent Active Users:*\n' + userList.map((u, i) => {
+          recentUsersText = '\n\n*🕒 Recent Active Users:*\n' + userList.map((u, i) => {
             const uName = u.username ? `@${escMd(u.username)}` : escMd(u.first_name || 'User');
-            return `${i + 1}. ${uName} (\`${u.user_id}\`) â€” ${u.request_count || 0} reqs`;
+            return `${i + 1}. ${uName} (\`${u.user_id}\`) — ${u.request_count || 0} reqs`;
           }).join('\n');
         }
 
-        const statsMsg = `ðŸ“Š *${BRAND.BOT_NAME} — Live Analytics Dashboard*\n` +
+        const statsMsg = `📊 *${BRAND.BOT_NAME} — Live Analytics Dashboard*\n` +
                          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                         `ðŸ‘¥ *Total Users:* \`${totalUsers}\`\n` +
-                         `ðŸŸ¢ *Active (Last 24h):* \`${active24h}\`\n` +
-                         `ðŸ“¥ *Total Files Sent:* \`${totalRequests}\`\n` +
-                         `ðŸ’¾ *Indexed Local Lectures:* \`${lectureIndex.size}\`\n` +
-                         `ðŸ“¦ *Storage Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                         `ðŸ›¡ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
-                         `ðŸš« *Banned Users:* \`${bannedCount}\`\n` +
-                         `ðŸ“¢ *Broadcasts Sent:* \`${globalStats.total_broadcasts}\`\n` +
+                         `👥 *Total Users:* \`${totalUsers}\`\n` +
+                         `🟢 *Active (Last 24h):* \`${active24h}\`\n` +
+                         `📥 *Total Files Sent:* \`${totalRequests}\`\n` +
+                         `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\`\n` +
+                         `📦 *Storage Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
+                         `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                         `🚫 *Banned Users:* \`${bannedCount}\`\n` +
+                         `📢 *Broadcasts Sent:* \`${globalStats.total_broadcasts}\`\n` +
                          `â±ï¸ *Uptime:* \`${uptimeStr}\`\n` +
                          `â˜ï¸ *Database:* \`Supabase (Synced)\`` +
                          recentUsersText;
@@ -2081,8 +2228,8 @@ if (bot) {
       if (uidMatch) {
         const targetId = parseInt(uidMatch[1], 10);
         try {
-          await bot.sendMessage(targetId, `ðŸ’¬ *Support Reply:*\n\n` + escMd(msg.text), { parse_mode: 'Markdown' });
-          await bot.sendMessage(SUPPORT_GID, `âœ… Reply delivered to user \`${targetId}\`.`, { reply_to_message_id: msg.message_id });
+          await bot.sendMessage(targetId, `💬 *Support Reply:*\n\n` + escMd(msg.text), { parse_mode: 'Markdown' });
+          await bot.sendMessage(SUPPORT_GID, `✅ Reply delivered to user \`${targetId}\`.`, { reply_to_message_id: msg.message_id });
           console.log(`[Support Group Reply] Successfully sent reply to ${targetId}`);
         } catch (e) {
           console.error('[Support Group Reply] Failed:', e.message);
@@ -2096,30 +2243,30 @@ if (bot) {
     const fromId = msg.from && msg.from.id;
     if (SUPPORT_GID && String(msg.chat.id) !== String(SUPPORT_GID) && msg.text && fromId && !isAdmin(fromId)) {
       if (bannedUsers.has(String(fromId))) {
-        return bot.sendMessage(msg.chat.id, 'ðŸš« You have been restricted from sending messages.');
+        return bot.sendMessage(msg.chat.id, '🚫 You have been restricted from sending messages.');
       }
       const user  = msg.from || {};
       const uname = user.username ? ('@' + escMd(user.username)) : '`None`';
       const name  = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unknown';
-      const header = `ðŸ“© *New Support Message*\n` +
-                     `ðŸ‘¤ *Name:* ` + escMd(name) + `\n` +
+      const header = `📩 *New Support Message*\n` +
+                     `👤 *Name:* ` + escMd(name) + `\n` +
                      `ðŸ·ï¸ *Username:* ` + uname + `\n` +
-                     `ðŸ†” *User ID:* \`` + fromId + `\`\n` +
+                     `🆔 *User ID:* \`` + fromId + `\`\n` +
                      `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                     `ðŸ’¬ *Message:*\n`;
+                     `💬 *Message:*\n`;
       try {
         await bot.sendMessage(SUPPORT_GID, header + escMd(msg.text), { parse_mode: 'Markdown', disable_web_page_preview: true });
-        await bot.sendMessage(msg.chat.id, 'âœ… *Message received!*\nOur team will reply to you here shortly.', { parse_mode: 'Markdown' });
+        await bot.sendMessage(msg.chat.id, '✅ *Message received!*\nOur team will reply to you here shortly.', { parse_mode: 'Markdown' });
       } catch (e) { console.error('Forward to group failed:', e.message); }
     }
   });
 }
 
-// â”€â”€â”€ Daily Midnight Incremental Cron (DISABLED) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Daily Midnight Incremental Cron (DISABLED) ─────────────────────────
 // Note: Nightly automatic batch dump is disabled as requested.
 // Dumps can still be triggered manually via /dump or the Admin Panel.
 
-// â”€â”€â”€ Health Check & Keep-Alive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Health Check & Keep-Alive ───────────────────────────────
 app.get('/health', async (_, res) => {
   let supabaseStatus = 'not_configured';
   if (SUPABASE_URL && SUPABASE_KEY) {
@@ -2144,6 +2291,7 @@ app.get('/health', async (_, res) => {
 
 // ─── /api/config — Public Branding Endpoint ───────────────────
 app.get('/api/config', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
   res.json({
     BOT_NAME:       BRAND.BOT_NAME,
     BOT_USERNAME:   BRAND.BOT_USERNAME,
@@ -2159,6 +2307,9 @@ app.get('/api/config', (req, res) => {
     BANNER_FILE:    getBannerFilename(),
     BANNER_URL:     getBannerUrl(),
   });
+});
+app.options('/api/config', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*').set('Access-Control-Allow-Headers', '*').send();
 });
 
 // ─── /api/vlink — Short-Lived Signed Video Token (Source Protection) ──────
@@ -2196,7 +2347,8 @@ app.options('/api/vlink/:token', (req, res) => { res.set('Access-Control-Allow-O
 app.post('/api/stream-token', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   const { contentId, batchId, subjectId, provider, userId } = req.body || {};
-  if (!contentId || !userId) return res.status(400).json({ ok: false, error: 'Missing contentId or userId' });
+  if (!contentId) return res.status(400).json({ ok: false, error: 'Missing contentId' });
+  const effectiveUserId = userId || 'anonymous';
 
   try {
     // Forward to existing madxGet stream endpoint (re-use existing logic)
@@ -2234,15 +2386,16 @@ app.options('/api/stream-token', (req, res) => { res.set('Access-Control-Allow-O
 // ─── /api/check-sub — Force Subscribe Check ────────────────
 app.get('/api/check-sub', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
-  const userId = req.query.user_id;
-  if (!userId) return res.status(400).json({ ok: false, error: 'Missing user_id' });
-  if (!BRAND.CHANNEL_ID || !bot) return res.json({ ok: true, subscribed: true }); // No channel configured
+  const userId = req.query.user_id || req.query.chatId || req.query.userId;
+  if (!userId || !BRAND.CHANNEL_ID || !bot) {
+    return res.json({ ok: true, subscribed: true, channel_link: BRAND.CHANNEL_LINK, group_link: BRAND.GROUP_LINK });
+  }
   try {
     const member = await bot.getChatMember(BRAND.CHANNEL_ID, parseInt(userId, 10));
     const subscribed = ['creator', 'administrator', 'member'].includes(member.status);
-    res.json({ ok: true, subscribed, channel_link: BRAND.CHANNEL_LINK });
+    res.json({ ok: true, subscribed, channel_link: BRAND.CHANNEL_LINK, group_link: BRAND.GROUP_LINK });
   } catch (e) {
-    res.json({ ok: true, subscribed: true }); // fail-open
+    res.json({ ok: true, subscribed: true, channel_link: BRAND.CHANNEL_LINK, group_link: BRAND.GROUP_LINK });
   }
 });
 app.options('/api/check-sub', (req, res) => { res.set('Access-Control-Allow-Origin', '*').set('Access-Control-Allow-Headers', '*').send(); });
@@ -2263,13 +2416,15 @@ app.options('/api/guru/solve', (req, res) => { res.set('Access-Control-Allow-Ori
 // ─── /api/user/vip-status — VIP & Referral Info ──────────────
 app.get('/api/user/vip-status', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
-  const userId = req.query.user_id;
-  if (!userId) return res.status(400).json({ ok: false, error: 'Missing user_id' });
+  const userId = req.query.user_id || req.query.chatId || req.query.userId;
+  if (!userId) {
+    return res.json({ ok: true, is_vip: false, points: 0, referral_code: '', invites_count: 0 });
+  }
   try {
     const info = await getUserVipInfo(userId);
     res.json({ ok: true, ...info });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    res.json({ ok: true, is_vip: false, points: 0, referral_code: '', invites_count: 0 });
   }
 });
 app.options('/api/user/vip-status', (req, res) => { res.set('Access-Control-Allow-Origin', '*').set('Access-Control-Allow-Headers', '*').send(); });

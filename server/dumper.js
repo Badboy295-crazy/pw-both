@@ -6,7 +6,7 @@ const { TelegramClient, Api } = require('telegram');
 const { StringSession } = require('telegram/sessions');
 const { NewMessage } = require('telegram/events');
 
-// â”€â”€â”€ Environment & Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Environment & Configuration ───────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const PW_USER_ID = process.env.PW_USER_ID || '6a429c85c07e44cc78e146e7';
 const {
@@ -26,7 +26,7 @@ let lectureIndex = new Map();
 let isDumpRunning = false;
 let isDumpCancelled = false;
 
-// â”€â”€â”€ API Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── API Setup ─────────────────────────────────────────────────
 const MADX_BASE = 'https://core.asmultiverse.app/api/v1/pw';
 const CONTENT_BASE = 'https://proxy.streamvideo.co.in/fetch/api.penpencil.co/v2';
 
@@ -99,7 +99,7 @@ async function supabaseRequest(endpoint, method = 'GET', body = null) {
   }
 }
 
-// â”€â”€â”€ Index Storage Manager â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Index Storage Manager ─────────────────────────────────────
 function loadLocalIndex() {
   try {
     if (fs.existsSync(INDEX_FILE)) {
@@ -125,7 +125,7 @@ function saveIndexRecord(key, data) {
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// â”€â”€â”€ Userbot Client Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Userbot Client Setup ──────────────────────────────────────
 const apiId = TG_API_ID;
 const apiHash = TG_API_HASH;
 const stringSession = new StringSession(SESSION_STRING);
@@ -142,7 +142,7 @@ function getUserbotClient(existingUserbot = null) {
   return userbot;
 }
 
-// â”€â”€â”€ Single Item Remote Fetcher with Auto-Cooldown & Retries â”€â”€â”€
+// ─── Single Item Remote Fetcher with Auto-Cooldown & Retries ───
 async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProgress = null) {
   if (lectureIndex.has(startParam)) {
     return { status: 'skipped', reason: 'already_indexed' };
@@ -192,11 +192,11 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
 
       // Format caption with tag
       const tag = `#PW_${startParam}`;
-      const dumpCaption = `ðŸ“¹ *Title:* ${metadata.name || 'Lecture'}\n` +
+      const dumpCaption = `📹 *Title:* ${metadata.name || 'Lecture'}\n` +
                           `ðŸ¡ *Subject:* ${metadata.subject || ''}\n` +
-                          `ðŸš© *Chapter:* ${metadata.topic || ''}\n` +
-                          (metadata.quality ? `ðŸŽ¬ *Quality:* ${metadata.quality}p\n` : '') +
-                          `\n${tag}\n\nâš¡ *Archived by \*`;
+                          `🚩 *Chapter:* ${metadata.topic || ''}\n` +
+                          (metadata.quality ? `🎬 *Quality:* ${metadata.quality}p\n` : '') +
+                          `\n${tag}\n\n⚡ *Archived by \*`;
 
       // Post to Primary Dump Channel
       const dumpMsg = await activeClient.sendMessage(DUMP_CHANNEL_ID, {
@@ -209,7 +209,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
         activeClient.sendMessage(BACKUP_CHANNEL_ID, {
           message: dumpCaption,
           file: mediaMsg.media
-        }).catch(err => console.warn('  âš ï¸ Backup channel mirror error:', err.message));
+        }).catch(err => console.warn('  ⚠️ï¸ Backup channel mirror error:', err.message));
       }
 
       // Cleanup userbot chat with remote bot
@@ -235,7 +235,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
         created_at: new Date().toISOString()
       });
 
-      console.log(`  âœ… [DUMPED] Msg #${dumpMsg.id} | ${metadata.name} (${metadata.quality || 'PDF'})`);
+      console.log(`  ✅ [DUMPED] Msg #${dumpMsg.id} | ${metadata.name} (${metadata.quality || 'PDF'})`);
       return { status: 'dumped', message_id: dumpMsg.id };
 
     } catch (err) {
@@ -244,7 +244,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
         if (onProgress) onProgress({ isWait: true, waitSec: err.waitSec });
         await sleep((err.waitSec + 3) * 1000);
       } else {
-        console.warn(`  âš ï¸ Attempt ${attempts}/${maxAttempts} failed (${startParam}):`, err.message);
+        console.warn(`  ⚠️ï¸ Attempt ${attempts}/${maxAttempts} failed (${startParam}):`, err.message);
         if (err.message.includes('not found')) return { status: 'error', reason: 'not_found' };
         await sleep(3500 * attempts); // Progressive backoff
       }
@@ -254,7 +254,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
   return { status: 'failed', reason: 'max_retries_exceeded' };
 }
 
-// â”€â”€â”€ Main Comprehensive Multi-Page Crawler & Dumper Engine â”€â”€â”€â”€â”€
+// ─── Main Comprehensive Multi-Page Crawler & Dumper Engine ─────
 async function runBatchDump(options = {}, onProgress = null) {
   if (isDumpRunning) {
     throw new Error('A batch dump process is already currently running!');
@@ -266,9 +266,9 @@ async function runBatchDump(options = {}, onProgress = null) {
   console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   console.log(`🚀 ${(process.env.BOT_NAME || 'STUDY HUB').toUpperCase()} — AUTONOMOUS BATCH DUMPER & INDEXER 🚀`);
   console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
-  console.log(`ðŸ“¦ Primary Storage Channel: ${DUMP_CHANNEL_ID}`);
-  console.log(`ðŸ›¡ï¸ Secondary Backup Channel: ${BACKUP_CHANNEL_ID}`);
-  console.log(`ðŸ‘¤ User ID: ${PW_USER_ID}\n`);
+  console.log(`📦 Primary Storage Channel: ${DUMP_CHANNEL_ID}`);
+  console.log(`🛡️ï¸ Secondary Backup Channel: ${BACKUP_CHANNEL_ID}`);
+  console.log(`👤 User ID: ${PW_USER_ID}\n`);
 
   loadLocalIndex();
   console.log(`ðŸ“ Local Index Loaded: ${lectureIndex.size} items already archived.\n`);
@@ -277,11 +277,11 @@ async function runBatchDump(options = {}, onProgress = null) {
   if (!activeClient.connected) {
     console.log('ðŸ” Connecting GramJS Userbot...');
     await activeClient.connect();
-    console.log('âœ… Userbot Connected Successfully!\n');
+    console.log('✅ Userbot Connected Successfully!\n');
   }
 
   // 1. Fetch ALL enrolled batches across all pages
-  console.log('ðŸ“¡ Fetching all enrolled batches (Paging all pages)...');
+  console.log('📡 Fetching all enrolled batches (Paging all pages)...');
   let batches = [];
   let batchPage = 1;
   while (!isDumpCancelled) {
@@ -293,13 +293,13 @@ async function runBatchDump(options = {}, onProgress = null) {
       if (bList.length < 50) break;
       batchPage++;
     } catch (e) {
-      console.warn(`  âš ï¸ Batch fetch page ${batchPage} error:`, e.message);
+      console.warn(`  ⚠️ï¸ Batch fetch page ${batchPage} error:`, e.message);
       break;
     }
   }
-  console.log(`ðŸ“š Found ${batches.length} total enrolled batches across all pages.\n`);
+  console.log(`📚 Found ${batches.length} total enrolled batches across all pages.\n`);
 
-  // â”€â”€â”€ Priority Sorting: Arjuna JEE 2.0 2027 first, then all 2027 batches, then by year â”€â”€â”€
+  // ─── Priority Sorting: Arjuna JEE 2.0 2027 first, then all 2027 batches, then by year ───
   batches.sort((a, b) => {
     const nameA = (a.name || '').toLowerCase();
     const nameB = (b.name || '').toLowerCase();
@@ -333,7 +333,7 @@ async function runBatchDump(options = {}, onProgress = null) {
     return nameA.localeCompare(nameB);
   });
 
-  console.log('ðŸŽ¯ [Priority Queue Applied] Top 5 batches to be dumped first:');
+  console.log('🎯 [Priority Queue Applied] Top 5 batches to be dumped first:');
   batches.slice(0, 5).forEach((b, i) => console.log(`   ${i + 1}. â­ ${b.name} (${b._id})`));
   console.log('');
 
@@ -345,7 +345,7 @@ async function runBatchDump(options = {}, onProgress = null) {
     if (isDumpCancelled) break;
     const batch = batches[bIdx];
     console.log(`\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”`);
-    console.log(`[Batch ${bIdx + 1}/${batches.length}] ðŸ“š ${batch.name} (ID: ${batch._id})`);
+    console.log(`[Batch ${bIdx + 1}/${batches.length}] 📚 ${batch.name} (ID: ${batch._id})`);
     console.log(`â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”`);
 
     if (onProgress) {
@@ -385,12 +385,12 @@ async function runBatchDump(options = {}, onProgress = null) {
           if (tList.length < 20) break;
           topicPage++;
         } catch (e) {
-          console.warn(`    âš ï¸ Topic page ${topicPage} error:`, e.message);
+          console.warn(`    ⚠️ï¸ Topic page ${topicPage} error:`, e.message);
           break;
         }
       }
 
-      console.log(`  ðŸ“‚ [Subject ${sIdx + 1}/${subjects.length}] ${subject.subject} â€” Found ${topics.length} Chapters`);
+      console.log(`  📁 [Subject ${sIdx + 1}/${subjects.length}] ${subject.subject} — Found ${topics.length} Chapters`);
 
       for (let tIdx = 0; tIdx < topics.length; tIdx++) {
         if (isDumpCancelled) break;
@@ -409,7 +409,7 @@ async function runBatchDump(options = {}, onProgress = null) {
                 `/batches/${batch._id}/subject/${subject.slug}/contents?tag=${topic.slug}&contentType=${cType}&page=${page}`
               );
             } catch (e) {
-              console.warn(`      âš ï¸ Content fetch error (${cType} page ${page}):`, e.message);
+              console.warn(`      ⚠️ï¸ Content fetch error (${cType} page ${page}):`, e.message);
               break;
             }
 
@@ -520,9 +520,9 @@ async function runBatchDump(options = {}, onProgress = null) {
     }
   }
 
-  // â”€â”€â”€ Secondary Retry Pass on any Failed Items (Zero Miss Guarantee) â”€â”€â”€
+  // ─── Secondary Retry Pass on any Failed Items (Zero Miss Guarantee) ───
   if (failedItems.length > 0 && !isDumpCancelled) {
-    console.log(`\nðŸ”„ [Secondary Retry Pass] Attempting retry on ${failedItems.length} failed items...`);
+    console.log(`\n🔄 [Secondary Retry Pass] Attempting retry on ${failedItems.length} failed items...`);
     await sleep(10000); // 10s rest before retry pass
 
     const remainingFailed = [];
@@ -531,7 +531,7 @@ async function runBatchDump(options = {}, onProgress = null) {
       const res = await fetchAndDumpSingleItem(activeClient, failed.startParam, failed.meta, onProgress);
       if (res.status === 'dumped') {
         totalDumped++;
-        console.log(`  ðŸŽ‰ [Retry Succeeded!] ${failed.meta.name}`);
+        console.log(`  🎉 [Retry Succeeded!] ${failed.meta.name}`);
         await sleep(3000);
       } else {
         remainingFailed.push(failed);
@@ -556,11 +556,11 @@ async function runBatchDump(options = {}, onProgress = null) {
   };
 
   console.log('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
-  console.log(`ðŸŽ‰ BATCH DUMP COMPLETED!`);
-  console.log(`ðŸ“¥ Total New Dumped: ${totalDumped}`);
+  console.log(`🎉 BATCH DUMP COMPLETED!`);
+  console.log(`📥 Total New Dumped: ${totalDumped}`);
   console.log(`â­ï¸ Total Skipped: ${totalSkipped}`);
   console.log(`âŒ Total Failed: ${failedItems.length}`);
-  console.log(`ðŸ“Š Archive Size: ${lectureIndex.size} items`);
+  console.log(`📊 Archive Size: ${lectureIndex.size} items`);
   console.log(`â±ï¸ Duration: ${summary.durationStr}`);
   console.log('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 
