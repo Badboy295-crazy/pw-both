@@ -193,7 +193,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
       // Format caption with tag
       const tag = `#PW_${startParam}`;
       const dumpCaption = `📹 *Title:* ${metadata.name || 'Lecture'}\n` +
-                          `ðŸ¡ *Subject:* ${metadata.subject || ''}\n` +
+                          `🏷️ *Subject:* ${metadata.subject || ''}\n` +
                           `🚩 *Chapter:* ${metadata.topic || ''}\n` +
                           (metadata.quality ? `🎬 *Quality:* ${metadata.quality}p\n` : '') +
                           `\n${tag}\n\n⚡ *Archived by \*`;
@@ -271,11 +271,11 @@ async function runBatchDump(options = {}, onProgress = null) {
   console.log(`👤 User ID: ${PW_USER_ID}\n`);
 
   loadLocalIndex();
-  console.log(`ðŸ“ Local Index Loaded: ${lectureIndex.size} items already archived.\n`);
+  console.log(`📝 Local Index Loaded: ${lectureIndex.size} items already archived.\n`);
 
   const activeClient = getUserbotClient(options.userbot);
   if (!activeClient.connected) {
-    console.log('ðŸ” Connecting GramJS Userbot...');
+    console.log('🔍 Connecting GramJS Userbot...');
     await activeClient.connect();
     console.log('✅ Userbot Connected Successfully!\n');
   }

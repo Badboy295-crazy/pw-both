@@ -277,7 +277,7 @@ async function initDatabase() {
         rawIndex.forEach(item => {
           if (item && item.key) lectureIndex.set(item.key, item);
         });
-        console.log(`ðŸ“ [Local Index] Restored ${lectureIndex.size} lectures/notes from disk.`);
+        console.log(`📝 [Local Index] Restored ${lectureIndex.size} lectures/notes from disk.`);
       }
     }
   } catch (e) {
@@ -292,7 +292,7 @@ async function initDatabase() {
         rawPdf.forEach(item => {
           if (item && item.key) pdfIndex.set(item.key, item);
         });
-        console.log(`ðŸ“ [PDF Index] Restored ${pdfIndex.size} PDF URLs from disk.`);
+        console.log(`📝 [PDF Index] Restored ${pdfIndex.size} PDF URLs from disk.`);
       }
     }
   } catch (e) {
@@ -306,14 +306,14 @@ async function initDatabase() {
         knownUsers.set(String(u.user_id), u);
         if (u.is_banned) bannedUsers.add(String(u.user_id));
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${users.length} users from Cloud DB.`);
+      console.log(`☁️ [Supabase] Restored ${users.length} users from Cloud DB.`);
     }
 
     const stats = await supabaseRequest('bot_stats?id=eq.global&select=*');
     if (Array.isArray(stats) && stats.length > 0) {
       globalStats.total_file_requests = stats[0].total_file_requests || globalStats.total_file_requests;
       globalStats.total_broadcasts = stats[0].total_broadcasts || globalStats.total_broadcasts;
-      console.log(`â˜ï¸ [Supabase] Restored stats: ${globalStats.total_file_requests} total requests.`);
+      console.log(`☁️ [Supabase] Restored stats: ${globalStats.total_file_requests} total requests.`);
     }
 
     // Sync lecture_index from Supabase
@@ -322,7 +322,7 @@ async function initDatabase() {
       lectures.forEach(l => {
         if (l && l.key) lectureIndex.set(l.key, l);
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${lectures.length} indexed lectures from Cloud DB (Total RAM Index: ${lectureIndex.size}).`);
+      console.log(`☁️ [Supabase] Restored ${lectures.length} indexed lectures from Cloud DB (Total RAM Index: ${lectureIndex.size}).`);
     }
 
     // Sync pdf_index from Supabase
@@ -331,7 +331,7 @@ async function initDatabase() {
       pdfs.forEach(p => {
         if (p && p.key) pdfIndex.set(p.key, p);
       });
-      console.log(`â˜ï¸ [Supabase] Restored ${pdfs.length} PDF URLs from Cloud DB (Total RAM Index: ${pdfIndex.size}).`);
+      console.log(`☁️ [Supabase] Restored ${pdfs.length} PDF URLs from Cloud DB (Total RAM Index: ${pdfIndex.size}).`);
     }
   } catch (e) {
     console.warn('[Supabase] Initial sync skipped:', e.message);
@@ -1690,7 +1690,7 @@ async function sendVideoQualitySelection(chatId, info) {
       const att = (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds[0]) || dpp || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `📝 ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || dpp._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1704,7 +1704,7 @@ async function sendVideoQualitySelection(chatId, info) {
           });
         }
       } else {
-        qualityButtons.push([{ text: `ðŸ“ ${dpp.topic || att.name || 'DPP'}`, callback_data: `n_${info.batchId}_${att._id || dpp._id}` }]);
+        qualityButtons.push([{ text: `📝 ${dpp.topic || att.name || 'DPP'}`, callback_data: `n_${info.batchId}_${att._id || dpp._id}` }]);
       }
     });
   }
@@ -1727,7 +1727,7 @@ async function sendVideoQualitySelection(chatId, info) {
 // ─── Send PDF/Notes Direct ────────────────────────────────────
 async function sendPdfDirect(chatId, info) {
   const isDpp    = info.type === 'DppNotes';
-  const emoji    = isDpp ? 'ðŸ“' : '📄';
+  const emoji    = isDpp ? '📝' : '📄';
   const label    = isDpp ? 'DPP PDF' : 'Class Notes';
   const caption  = getCaption(false, info);
 
@@ -2050,7 +2050,7 @@ async function triggerBatchDumpFlow(targetChatId) {
       const text = `🚀 *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
                    `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                    `📚 *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
-                   `ðŸ“– *Subject:* \`${escMd(p.subjectName || 'Scanning...')}\`\n` +
+                   `📖 *Subject:* \`${escMd(p.subjectName || 'Scanning...')}\`\n` +
                    `🚩 *Chapter:* \`${escMd(p.topicName || 'Scanning...')}\`\n` +
                    `📥 *New Dumped:* \`${p.totalDumped || 0}\`\n` +
                    `â­ï¸ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
@@ -2194,10 +2194,10 @@ if (bot) {
       if (data === 'adm_storage_info') {
         const storageMsg = `📦 *Telegram Storage Channels Status*\n` +
                            `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
-                           `ðŸ“ *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
+                           `📝 *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
                            `🛡️ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
                            `💾 *Total Indexed Files:* \`${lectureIndex.size}\` items\n` +
-                           `â˜ï¸ *Cloud Database:* \`Supabase PostgreSQL\``;
+                           `☁️ *Cloud Database:* \`Supabase PostgreSQL\``;
         return bot.sendMessage(q.message.chat.id, storageMsg, { parse_mode: 'Markdown' });
       }
 
@@ -2677,7 +2677,7 @@ if (bot) {
                          `🚫 *Banned Users:* \`${bannedCount}\`\n` +
                          `📢 *Broadcasts Sent:* \`${globalStats.total_broadcasts}\`\n` +
                          `â±ï¸ *Uptime:* \`${uptimeStr}\`\n` +
-                         `â˜ï¸ *Database:* \`Supabase (Synced)\`` +
+                         `☁️ *Database:* \`Supabase (Synced)\`` +
                          recentUsersText;
 
         return bot.sendMessage(msg.chat.id, statsMsg, { parse_mode: 'Markdown', disable_web_page_preview: true });
@@ -2714,7 +2714,7 @@ if (bot) {
       const name  = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Unknown';
       const header = `📩 *New Support Message*\n` +
                      `👤 *Name:* ` + escMd(name) + `\n` +
-                     `ðŸ·ï¸ *Username:* ` + uname + `\n` +
+                     `👤 *Username:* ` + uname + `\n` +
                      `🆔 *User ID:* \`` + fromId + `\`\n` +
                      `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                      `💬 *Message:*\n`;
