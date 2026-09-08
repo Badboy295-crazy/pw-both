@@ -1636,7 +1636,7 @@ if (bot) {
         const cachedPdf = pdfIndex.get(contentIdPart) || pdfIndex.get(startParam);
         if (cachedPdf && cachedPdf.pdf_url) {
           if (loadingMsg) await bot.deleteMessage(q.message.chat.id, loadingMsg.message_id).catch(() => {});
-          await bot.sendMessage(q.message.chat.id, `ðŸ“„ *${escMd(cachedPdf.name || 'Class Notes / DPP')}*\n\nâš¡ *Powered by ${process.env.POWERED_BY || 'Study Hub'}*`, {
+          await bot.sendMessage(q.message.chat.id, `ðŸ“„ *${escMd(cachedPdf.name || 'Class Notes / DPP')}*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, {
             parse_mode: 'Markdown',
             reply_markup: {
               inline_keyboard: [
@@ -1653,7 +1653,7 @@ if (bot) {
       let finalCaption = q.message.caption || q.message.text || '';
       if (isVideo) {
          finalCaption = finalCaption.split('ðŸ“Š')[0].trim();
-         finalCaption += `\n\nðŸŽ¬ *Quality:* ${qualityPart}p\n\nâš¡ *Powered by ${process.env.POWERED_BY || 'Study Hub'}*`;
+         finalCaption += `\n\n🎬 *Quality:* ${qualityPart}p\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`;
       }
 
       enqueueFetch(q.message.chat.id, startParam, finalCaption, isVideo ? 'video' : 'document', loadingMsg?.message_id);
@@ -1805,7 +1805,7 @@ if (bot) {
             return;
           }
           const loadingMsg = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
-          enqueueFetch(chatId, cleanPayload, 'ðŸ“„ *Direct Notes / DPP Request*\n\nâš¡ *Powered by ${process.env.POWERED_BY || 'Study Hub'}*', 'document', loadingMsg.message_id);
+          enqueueFetch(chatId, cleanPayload, `📄 *Direct Notes / DPP Request*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, 'document', loadingMsg.message_id);
           return;
         }
 
@@ -1823,7 +1823,7 @@ if (bot) {
         enqueueFetch(
           chatId,
           cleanPayload,
-          isVideo ? `ðŸ“¹ *Lecture Video (${parts[2] || '720'}p)*\n\nâš¡ *Powered by ${process.env.POWERED_BY || 'Study Hub'}*` : 'ðŸ“„ *Direct File Request*\n\nâš¡ *Powered by ${process.env.POWERED_BY || 'Study Hub'}*',
+          isVideo ? `📹 *Lecture Video (${parts[2] || '720'}p)*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*` : `📄 *Direct File Request*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`,
           isVideo ? 'video' : 'document',
           loadingMsg.message_id
         );
