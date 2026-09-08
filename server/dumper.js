@@ -240,7 +240,7 @@ async function fetchAndDumpSingleItem(activeClient, startParam, metadata, onProg
 
     } catch (err) {
       if (err.isWait) {
-        console.log(`  â³ [FloodWait Detected] Sleeping for ${err.waitSec + 3} seconds...`);
+        console.log(`  ⏳ [FloodWait Detected] Sleeping for ${err.waitSec + 3} seconds...`);
         if (onProgress) onProgress({ isWait: true, waitSec: err.waitSec });
         await sleep((err.waitSec + 3) * 1000);
       } else {
@@ -364,7 +364,7 @@ async function runBatchDump(options = {}, onProgress = null) {
     try {
       batchDetails = await madxGet(`/batches/${batch._id}/details`);
     } catch (e) {
-      console.warn(`  âŒ Failed to fetch batch details: ${e.message}`);
+      console.warn(`  ❌ Failed to fetch batch details: ${e.message}`);
       continue;
     }
 
@@ -559,7 +559,7 @@ async function runBatchDump(options = {}, onProgress = null) {
   console.log(`🎉 BATCH DUMP COMPLETED!`);
   console.log(`📥 Total New Dumped: ${totalDumped}`);
   console.log(`â­ï¸ Total Skipped: ${totalSkipped}`);
-  console.log(`âŒ Total Failed: ${failedItems.length}`);
+  console.log(`❌ Total Failed: ${failedItems.length}`);
   console.log(`📊 Archive Size: ${lectureIndex.size} items`);
   console.log(`â±ï¸ Duration: ${summary.durationStr}`);
   console.log('═══════════════════════════════════════════════════════════');

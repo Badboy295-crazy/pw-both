@@ -770,7 +770,7 @@ window.verifySubFromMiniApp = async function() {
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>â³ Verifying Membership...</span>';
+    btn.innerHTML = '<span>⏳ Verifying Membership...</span>';
   }
   try {
     const ok = await checkInAppForceSub(true);
@@ -809,7 +809,7 @@ window.checkMaintenanceAgain = async function() {
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<span>â³ Checking Status...</span>';
+    btn.innerHTML = '<span>⏳ Checking Status...</span>';
   }
   try {
     const ok = await checkInAppForceSub(true);
@@ -1891,7 +1891,7 @@ async function loadContent(type, reset = false) {
     updateContentLoadMore(type);
   } else if (lmBtn) {
     lmBtn.disabled = true;
-    lmBtn.innerHTML = `<span class="btn-load-more-text">â³ Loading Page ${state.contentPage[type]}...</span>`;
+    lmBtn.innerHTML = `<span class="btn-load-more-text">⏳ Loading Page ${state.contentPage[type]}...</span>`;
   }
 
   const batchId = state.batch._id;
@@ -1964,7 +1964,7 @@ async function loadContent(type, reset = false) {
           <button class="retry-btn" onclick="loadContent('${type}', true)">Retry</button>
         </div>`;
     } else {
-      showToast('âŒ Failed to load more items');
+      showToast('❌ Failed to load more items');
     }
   } finally {
     state.contentLoading = false;
@@ -2178,7 +2178,7 @@ async function sendContent(keyOrItem, type) {
   }
 
   if (!item) {
-    showToast('âŒ Item data not found');
+    showToast('❌ Item data not found');
     state.isSending = false;
     return;
   }
@@ -2246,7 +2246,7 @@ async function sendContent(keyOrItem, type) {
 
   // For AS Multiverse providers Notes: resolve live CloudFront PDF URL if needed
   if (!isVideo && !pdfUrl && isStreamProvider(state.provider)) {
-    showToast('â³ Fetching PDF document...');
+    showToast('⏳ Fetching PDF document...');
     try {
       const res = await serverGet(
         `/api/batch/${encodeURIComponent(batchId)}/subject/${encodeURIComponent(subjectId)}/content/${encodeURIComponent(contentId)}/details?provider=${state.provider}`
@@ -2272,17 +2272,17 @@ async function sendContent(keyOrItem, type) {
   // For Notes/DPP: require either pdfUrl OR contentId
   // For Videos: require batchId + contentId
   if (isVideo && (!batchId || !contentId)) {
-    showToast('âŒ Could not identify content');
+    showToast('❌ Could not identify content');
     state.isSending = false;
     return;
   }
   if (!isVideo && !pdfUrl && !contentId) {
-    showToast('âŒ No PDF URL or ID found');
+    showToast('❌ No PDF URL or ID found');
     state.isSending = false;
     return;
   }
 
-  showToast('â³ Sending to Telegram chat...');
+  showToast('🚀 Sending to Telegram chat...');
 
   const teacher = state.subject?.teacherIds?.[0];
   let faculty = teacher ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() : '';
@@ -2365,7 +2365,7 @@ async function sendContent(keyOrItem, type) {
     }
   } catch (err) {
     console.warn('Bot send failed:', err.message);
-    showToast('âŒ Failed to send. Please try again.');
+    showToast('❌ Failed to send. Please try again.');
   } finally {
     state.isSending = false;
   }
@@ -2449,100 +2449,125 @@ function initPlayerControls() {
   const timeCurr = document.getElementById('time-current');
   const timeTotal = document.getElementById('time-total');
   const centerIcon = document.getElementById('center-play-icon');
+  const centerOverlay = document.getElementById('video-play-center');
   const playBtn = document.getElementById('btn-play-pause');
 
-  if (!videoEl) return;
+  if (!videoEl || !track) return;
 
-  // Time update -> Scrubber & Counters
-  videoEl.addEventListener('timeupdate', () => {
-    if (isDraggingScrubber || !videoEl.duration) return;
+  function updateScrubber() {
+    if (!videoEl.duration || isDraggingScrubber) return;
     const pct = (videoEl.currentTime / videoEl.duration) * 100;
     if (played) played.style.width = `${pct}%`;
     if (handle) handle.style.left = `${pct}%`;
     if (timeCurr) timeCurr.textContent = formatPlayerTime(videoEl.currentTime);
     if (timeTotal) timeTotal.textContent = formatPlayerTime(videoEl.duration);
-  });
 
-  // Progress update -> Buffered bar
-  videoEl.addEventListener('progress', () => {
-    if (!videoEl.duration || videoEl.buffered.length === 0) return;
-    try {
-      const buffEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
-      const pct = (buffEnd / videoEl.duration) * 100;
-      if (buffered) buffered.style.width = `${Math.min(pct, 100)}%`;
-    } catch (e) {}
-  });
+    if (buffered && videoEl.buffered.length > 0) {
+      try {
+        const bufEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
+        const bufPct = (bufEnd / videoEl.duration) * 100;
+        buffered.style.width = `${Math.min(bufPct, 100)}%`;
+      } catch (e) {}
+    }
+  }
 
-  // Play/Pause UI sync
-  videoEl.addEventListener('play', () => {
-    if (playBtn) playBtn.textContent = '❚❚';
-    if (centerIcon) centerIcon.textContent = '❚❚';
+  function seekVideo(e) {
+    const rect = track.getBoundingClientRect();
+    const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    if (videoEl.duration) {
+      videoEl.currentTime = ratio * videoEl.duration;
+      const pct = ratio * 100;
+      if (played) played.style.width = `${pct}%`;
+      if (handle) handle.style.left = `${pct}%`;
+      if (timeCurr) timeCurr.textContent = formatPlayerTime(videoEl.currentTime);
+    }
+  }
+
+  track.addEventListener('mousedown', (e) => {
+    isDraggingScrubber = true;
+    clearTimeout(controlsTimeout);
     showPlayerControls();
+    seekVideo(e);
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (isDraggingScrubber) {
+      clearTimeout(controlsTimeout);
+      showPlayerControls();
+      seekVideo(e);
+    }
+  });
+  window.addEventListener('mouseup', () => {
+    if (isDraggingScrubber) {
+      isDraggingScrubber = false;
+      resetControlsTimeout();
+    }
+  });
+
+  track.addEventListener('touchstart', (e) => {
+    isDraggingScrubber = true;
+    clearTimeout(controlsTimeout);
+    showPlayerControls();
+    seekVideo(e);
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (isDraggingScrubber) {
+      clearTimeout(controlsTimeout);
+      showPlayerControls();
+      seekVideo(e);
+    }
+  }, { passive: true });
+  window.addEventListener('touchend', () => {
+    if (isDraggingScrubber) {
+      isDraggingScrubber = false;
+      resetControlsTimeout();
+    }
+  });
+
+  // Mouse & Touch movement anywhere on video wakes up controls
+  const wrapper = document.getElementById('video-wrapper');
+  if (wrapper) {
+    wrapper.addEventListener('mousemove', () => resetControlsTimeout());
+    wrapper.addEventListener('touchstart', () => resetControlsTimeout(), { passive: true });
+  }
+
+  videoEl.addEventListener('timeupdate', updateScrubber);
+  videoEl.addEventListener('durationchange', () => {
+    if (timeTotal) timeTotal.textContent = formatPlayerTime(videoEl.duration);
+  });
+  videoEl.addEventListener('progress', updateScrubber);
+
+  videoEl.addEventListener('play', () => {
+    if (playBtn) playBtn.innerHTML = '❚❚';
+    if (centerIcon) centerIcon.innerHTML = '❚❚';
+    if (centerOverlay) centerOverlay.classList.add('playing');
     resetControlsTimeout();
   });
 
   videoEl.addEventListener('pause', () => {
-    if (playBtn) playBtn.textContent = '▶';
-    if (centerIcon) centerIcon.textContent = '▶';
+    if (playBtn) playBtn.innerHTML = '▶';
+    if (centerIcon) centerIcon.innerHTML = '▶';
+    if (centerOverlay) centerOverlay.classList.remove('playing');
+    clearTimeout(controlsTimeout);
     showPlayerControls();
   });
 
   videoEl.addEventListener('ended', () => {
-    if (playBtn) playBtn.textContent = '▶';
-    if (centerIcon) centerIcon.textContent = '↺';
+    if (playBtn) playBtn.innerHTML = '▶';
+    if (centerIcon) centerIcon.innerHTML = '▶';
+    if (centerOverlay) centerOverlay.classList.remove('playing');
+    clearTimeout(controlsTimeout);
     showPlayerControls();
   });
 
-  // Scrubber Click & Drag
-  function seekTo(clientX) {
-    if (!track || !videoEl.duration) return;
-    const rect = track.getBoundingClientRect();
-    const pos = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const pct = pos / rect.width;
-    videoEl.currentTime = pct * videoEl.duration;
-    if (played) played.style.width = `${pct * 100}%`;
-    if (handle) handle.style.left = `${pct * 100}%`;
-    if (timeCurr) timeCurr.textContent = formatPlayerTime(videoEl.currentTime);
-  }
-
-  if (track) {
-    track.addEventListener('click', (e) => {
-      seekTo(e.clientX);
-      showPlayerControls();
-      resetControlsTimeout();
-    });
-
-    track.addEventListener('mousedown', (e) => {
-      isDraggingScrubber = true;
-      seekTo(e.clientX);
-      const onMove = (ev) => { if (isDraggingScrubber) seekTo(ev.clientX); };
-      const onUp = () => {
-        isDraggingScrubber = false;
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
-        resetControlsTimeout();
-      };
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
-    });
-
-    track.addEventListener('touchstart', (e) => {
-      isDraggingScrubber = true;
-      if (e.touches[0]) seekTo(e.touches[0].clientX);
-    }, { passive: true });
-
-    track.addEventListener('touchmove', (e) => {
-      if (isDraggingScrubber && e.touches[0]) seekTo(e.touches[0].clientX);
-    }, { passive: true });
-
-    track.addEventListener('touchend', () => {
-      isDraggingScrubber = false;
-      resetControlsTimeout();
-    });
-  }
-
   videoEl.addEventListener('loadedmetadata', () => {
     if (timeTotal) timeTotal.textContent = formatPlayerTime(videoEl.duration);
+  });
+
+  window.addEventListener('click', (e) => {
+    if (!e.target.closest('#quality-dropdown-wrap')) {
+      closeQualityMenu();
+    }
   });
 }
 
@@ -3165,7 +3190,7 @@ async function handleInstallAction() {
       deferredPwaPrompt.prompt();
       const choice = await deferredPwaPrompt.userChoice;
       if (choice.outcome === 'accepted') {
-        showToast('â³ Installing \ App...');
+        showToast('📲 Installing App...');
       }
       deferredPwaPrompt = null;
       closeInstallModal();

@@ -1811,10 +1811,10 @@ async function processFetchQueue() {
     } catch (err) {
       if (err.cooldown && attempts < 3) {
         const secs = err.waitSeconds || 5;
-        console.log(`â³ [Cooldown Detected] Source server asked to wait ${secs}s. Pausing queue and auto-retrying...`);
+        console.log(`⏳ [Cooldown Detected] Source server asked to wait ${secs}s. Pausing queue and auto-retrying...`);
         const pending = pendingRequests.get(req.reqId);
         if (pending && pending.statusMsgId && bot) {
-          bot.editMessageText(`â³ *Please wait ${secs}s — auto-fetching your file...*`, {
+          bot.editMessageText(`⏳ *Please wait ${secs}s — auto-fetching your file...*`, {
             chat_id: pending.chatId,
             message_id: pending.statusMsgId,
             parse_mode: 'Markdown'
@@ -1826,7 +1826,7 @@ async function processFetchQueue() {
         const pending = pendingRequests.get(req.reqId);
         if (pending) {
           if (pending.statusMsgId) bot.deleteMessage(pending.chatId, pending.statusMsgId).catch(()=>{});
-          bot.sendMessage(pending.chatId, 'âŒ *Failed to fetch file from server.*', { parse_mode: 'Markdown' });
+          bot.sendMessage(pending.chatId, '❌ *Failed to fetch file from server.*', { parse_mode: 'Markdown' });
           pendingRequests.delete(req.reqId);
         }
         break;
@@ -2006,7 +2006,7 @@ function getAdminKeyboard() {
     inline_keyboard: [
       [
         { text: '📊 Live Analytics', callback_data: 'adm_stats' },
-        { text: dumpStatus.isRunning ? 'â³ Dump Running...' : '🚀 Start Batch Dump', callback_data: 'adm_start_dump' }
+        { text: dumpStatus.isRunning ? '⏳ Dump Running...' : '🚀 Start Batch Dump', callback_data: 'adm_start_dump' }
       ],
       [
         { text: '🛑 Stop Dump', callback_data: 'adm_stop_dump' },
@@ -2017,7 +2017,7 @@ function getAdminKeyboard() {
         { text: '🔄 Refresh Panel', callback_data: 'adm_refresh' }
       ],
       [
-        { text: 'âŒ Close Panel', callback_data: 'close_msg' }
+        { text: '❌ Close Panel', callback_data: 'close_msg' }
       ]
     ]
   };
@@ -2034,7 +2034,7 @@ async function triggerBatchDumpFlow(targetChatId) {
   liveDumpJob.chatId = targetChatId;
   const statusMsg = await bot.sendMessage(
     targetChatId,
-    `🚀 *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\nâ³ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
+    `🚀 *${BRAND.BOT_NAME} — Batch Dumper Initialized*\n\n⏳ Connecting to PW & Telegram APIs...\nStarting full curriculum scan.`,
     { parse_mode: 'Markdown' }
   );
   liveDumpJob.msgId = statusMsg.message_id;
@@ -2046,7 +2046,7 @@ async function triggerBatchDumpFlow(targetChatId) {
     liveDumpJob.lastUpdate = now;
 
     try {
-      const waitNotice = p.isWait ? `\nâ³ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
+      const waitNotice = p.isWait ? `\n⏳ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
       const text = `🚀 *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
                    `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
                    `📚 *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
@@ -2077,8 +2077,8 @@ async function triggerBatchDumpFlow(targetChatId) {
     }
 
     const failedLine = summary.totalFailed === 0 
-      ? `âŒ *Failed / Missed:* \`0 (100% Success — Zero Errors!)\` ✅`
-      : `âŒ *Failed / Missed:* \`${summary.totalFailed}\``;
+      ? `❌ *Failed / Missed:* \`0 (100% Success — Zero Errors!)\` ✅`
+      : `❌ *Failed / Missed:* \`${summary.totalFailed}\``;
 
     const completionMsg = `🎉 *BATCH DUMP & ARCHIVE COMPLETED!*\n` +
                           `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
@@ -2101,7 +2101,7 @@ async function triggerBatchDumpFlow(targetChatId) {
     }
   } catch (err) {
     liveDumpJob.isRunning = false;
-    bot.sendMessage(targetChatId, `âŒ *Batch Dump Error:* ${err.message}`, { parse_mode: 'Markdown' });
+    bot.sendMessage(targetChatId, `❌ *Batch Dump Error:* ${err.message}`, { parse_mode: 'Markdown' });
   }
 }
 
@@ -2215,12 +2215,12 @@ if (bot) {
       await bot.answerCallbackQuery(q.id);
       
       if (!userbot) {
-        return bot.sendMessage(q.message.chat.id, "âŒ Error: Delivery system offline (Userbot not initialized).");
+        return bot.sendMessage(q.message.chat.id, "❌ Error: Delivery system offline (Userbot not initialized).");
       }
 
       // Instead of hiding the inline keyboard, we send a new loading message
       // This preserves the original menu so the user can download other attachments!
-      const loadingMsg = await bot.sendMessage(q.message.chat.id, 'â³ *Fetching file, please wait...*', {
+      const loadingMsg = await bot.sendMessage(q.message.chat.id, '⏳ *Fetching file, please wait...*', {
         parse_mode: 'Markdown',
         reply_to_message_id: q.message.message_id
       }).catch(() => null);
@@ -2364,7 +2364,7 @@ if (bot) {
               });
               return;
             }
-            const loadingMsgN = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
+            const loadingMsgN = await bot.sendMessage(chatId, '⏳ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
             const caption = getCaption(false, { name: lp.name, subject: lp.subject, topic: lp.topic });
             enqueueFetch(chatId, lp.contentId, caption, 'document', loadingMsgN.message_id);
             return;
@@ -2415,7 +2415,7 @@ if (bot) {
             trackFileRequest(chatId);
             return;
           }
-          const loadingMsg = await bot.sendMessage(chatId, 'â³ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
+          const loadingMsg = await bot.sendMessage(chatId, '⏳ *Fetching your document, please wait...*', { parse_mode: 'Markdown' });
           enqueueFetch(chatId, cleanPayload, `📄 *Direct Notes / DPP Request*\n\n⚡ *Powered by ${BRAND.BOT_NAME || 'Study Hub'}*`, 'document', loadingMsg.message_id);
           return;
         }
@@ -2430,7 +2430,7 @@ if (bot) {
 
         // Case C: Video with specific quality (batchId_contentId_quality) (legacy)
         const isVideo = parts.length >= 3;
-        const loadingMsg = await bot.sendMessage(chatId, isVideo ? 'â³ *Fetching your video, please wait...*' : 'â³ *Fetching file, please wait...*', { parse_mode: 'Markdown' });
+        const loadingMsg = await bot.sendMessage(chatId, isVideo ? '⏳ *Fetching your video, please wait...*' : '⏳ *Fetching file, please wait...*', { parse_mode: 'Markdown' });
         enqueueFetch(
           chatId,
           cleanPayload,
@@ -2558,7 +2558,7 @@ if (bot) {
           return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can add new admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
-        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/addadmin 123456789`', { parse_mode: 'Markdown' });
+        if (!targetId) return bot.sendMessage(msg.chat.id, '❌ Usage: `/addadmin 123456789`', { parse_mode: 'Markdown' });
         addAdminUser(targetId);
         return bot.sendMessage(msg.chat.id, `✅ User \`${targetId}\` is now an *Authorized Admin*!`, { parse_mode: 'Markdown' });
       }
@@ -2569,12 +2569,12 @@ if (bot) {
           return bot.sendMessage(msg.chat.id, '⛔ Only the *Super Admin* can remove admins.', { parse_mode: 'Markdown' });
         }
         const targetId = parseInt(txt.split(' ')[1], 10);
-        if (!targetId) return bot.sendMessage(msg.chat.id, 'âŒ Usage: `/removeadmin 123456789`', { parse_mode: 'Markdown' });
+        if (!targetId) return bot.sendMessage(msg.chat.id, '❌ Usage: `/removeadmin 123456789`', { parse_mode: 'Markdown' });
         const res = removeAdminUser(targetId);
         if (res) {
           return bot.sendMessage(msg.chat.id, `✅ Admin \`${targetId}\` has been removed.`, { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, `âŒ Cannot remove Super Admin.`, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `❌ Cannot remove Super Admin.`, { parse_mode: 'Markdown' });
         }
       }
 
@@ -2591,14 +2591,14 @@ if (bot) {
         if (cached) {
           return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, `âŒ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `❌ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
         }
       }
 
       // /br <message>
       if (txt.startsWith('/br ')) {
         const bMsg = txt.slice(4).trim();
-        if (!bMsg) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /br your message here');
+        if (!bMsg) return bot.sendMessage(msg.chat.id, '❌ Usage: /br your message here');
         let ok = 0, fail = 0;
         const uids = Array.from(knownUsers.keys());
         for (const uid of uids) {
@@ -2619,13 +2619,13 @@ if (bot) {
           updated_at: new Date().toISOString()
         }, 'resolution=merge-duplicates');
 
-        return bot.sendMessage(msg.chat.id, `✅ Broadcast complete!\n\n📤 Sent: ${ok}\nâŒ Failed: ${fail}`);
+        return bot.sendMessage(msg.chat.id, `✅ Broadcast complete!\n\n📤 Sent: ${ok}\n❌ Failed: ${fail}`);
       }
 
       // /ban <userId>
       if (txt.startsWith('/ban ')) {
         const uid = parseInt(txt.split(' ')[1]);
-        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /ban 123456789');
+        if (!uid) return bot.sendMessage(msg.chat.id, '❌ Usage: /ban 123456789');
         setBanStatus(uid, true);
         return bot.sendMessage(msg.chat.id, `🚫 User \`${uid}\` has been banned.`);
       }
@@ -2633,7 +2633,7 @@ if (bot) {
       // /unban <userId>
       if (txt.startsWith('/unban ')) {
         const uid = parseInt(txt.split(' ')[1]);
-        if (!uid) return bot.sendMessage(msg.chat.id, 'âŒ Usage: /unban 123456789');
+        if (!uid) return bot.sendMessage(msg.chat.id, '❌ Usage: /unban 123456789');
         setBanStatus(uid, false);
         return bot.sendMessage(msg.chat.id, `✅ User \`${uid}\` has been unbanned.`);
       }
@@ -2697,7 +2697,7 @@ if (bot) {
           console.log(`[Support Group Reply] Successfully sent reply to ${targetId}`);
         } catch (e) {
           console.error('[Support Group Reply] Failed:', e.message);
-          await bot.sendMessage(SUPPORT_GID, `âŒ Failed to deliver reply: ` + e.message, { reply_to_message_id: msg.message_id });
+          await bot.sendMessage(SUPPORT_GID, `❌ Failed to deliver reply: ` + e.message, { reply_to_message_id: msg.message_id });
         }
         return;
       }
