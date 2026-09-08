@@ -1460,7 +1460,12 @@ function openBatch(batchRef) {
     imgEl.style.display = img ? 'block' : 'none';
   }
   document.getElementById('batch-hero-name').textContent = name;
-  document.getElementById('batch-hero-class').textContent = b.class ? `Class ${b.class}` : (PROVIDERS[state.provider]?.name || (window.APP_CONFIG?.BOT_NAME || 'Study Hub'));
+  const batchClass = b.class ? `Class ${b.class}` : 'Class All';
+  const classBadge = document.getElementById('batch-hero-class');
+  if (classBadge) classBadge.textContent = batchClass;
+  const provTag = PROVIDERS[state.provider]?.name || (window.APP_CONFIG?.BOT_NAME || 'InvalidStudy');
+  const tagBadge = document.querySelector('.hero-badges .badge-tag');
+  if (tagBadge) tagBadge.textContent = provTag.toUpperCase();
 
   const batchHeartEl = document.getElementById('batch-view-heart');
   if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? 'â¤ï¸' : 'ðŸ¤';
@@ -1588,18 +1593,33 @@ function renderSubjectCard(s) {
     s._id = sId;
     state.loadedSubjects[sId] = s;
   }
-  const subName = s.subject || s.title || 'Subject';
+  const subName = s.subject || s.title || s.name || 'Subject';
   const img = imgUrl(s.imageId) || s.image || '';
   const teacher = s.teacherIds?.[0];
   const tName = teacher ? `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() : '';
-  const videoCount = s.lectureCount ?? s.totalVideos ?? 0;
+
+  const numLectures = (typeof s.totalVideos === 'number' && s.totalVideos > 0)
+    ? s.totalVideos
+    : ((typeof s.lectureCount === 'number' && s.lectureCount > 0) ? s.lectureCount : 0);
+  const numTopics = s.tagCount || s.totalTopics || 0;
+
+  let countText = '';
+  if (numLectures > 0) {
+    countText = `${numLectures} Lectures`;
+  } else if (numTopics > 0) {
+    countText = `${numTopics} Topics`;
+  } else if (s.totalNotes && s.totalNotes > 0) {
+    countText = `${s.totalNotes} Notes`;
+  } else {
+    countText = 'Lectures & Notes';
+  }
 
   return `
     <div class="subject-card" onclick="openSubject('${sId}')">
       ${img ? `<img class="subject-card-icon" src="${img}" alt="${subName}" onerror="this.style.display='none'" />` : '<div class="subject-card-icon"></div>'}
       <div class="subject-card-info">
         <div class="subject-card-title">${subName}</div>
-        <div class="subject-card-teacher">${tName ? `Faculty: ${tName} • ` : ''}${videoCount} Lectures</div>
+        <div class="subject-card-teacher">${tName ? `Faculty: ${tName} • ` : ''}${countText}</div>
       </div>
       <span class="subject-card-arrow">→</span>
     </div>`;
@@ -2052,7 +2072,7 @@ async function handleStreamPlay(itemId, type) {
   haptic('medium');
   const item = state.loadedPayloads[itemId];
   if (!item) {
-    showToast('âŒ Video item not found');
+    showToast('❌ Video item not found');
     return;
   }
 
@@ -2061,7 +2081,7 @@ async function handleStreamPlay(itemId, type) {
   const contentId = item.contentId || item._id || item.id || '';
   const name = item.videoDetails?.name || item.name || item.topic || 'Lecture';
 
-  showToast('â³ Loading video player...');
+  showToast('⏳ Loading video player...');
 
   try {
     const res = await serverGet(
@@ -2071,7 +2091,7 @@ async function handleStreamPlay(itemId, type) {
 
     const streamUrl = res?.data?.link || res?.link || '';
     if (!streamUrl) {
-      showToast('⚠️ï¸ Video stream is currently unavailable. Please try another lecture.');
+      showToast('⚠️ Video stream is currently unavailable. Please try another lecture.');
       return;
     }
 
@@ -2092,7 +2112,7 @@ async function handleStreamPlay(itemId, type) {
     launchRangeXPlayer();
   } catch (err) {
     console.error('Error fetching stream details:', err);
-    showToast('âŒ Video stream currently unavailable');
+    showToast('❌ Video stream currently unavailable');
   }
 }
 

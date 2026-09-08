@@ -1058,6 +1058,8 @@ app.get('/api/batch/:batchId/details', async (req, res) => {
         const sId = String(s._id || s.id || '');
         const name = s.name || s.title || 'Subject';
         const img = s.image || s.previewImage || getBannerUrl();
+        const totalVids = (typeof s.totalVideos === 'number') ? s.totalVideos : (s.lectureCount || 0);
+        const totalNotes = (typeof s.totalNotes === 'number') ? s.totalNotes : 0;
         return {
           _id: sId,
           id: sId,
@@ -1065,7 +1067,11 @@ app.get('/api/batch/:batchId/details', async (req, res) => {
           title: name,
           slug: s.slug || sId,
           image: img,
-          previewImage: { baseUrl: img, key: '' }
+          previewImage: { baseUrl: img, key: '' },
+          totalVideos: totalVids,
+          lectureCount: totalVids,
+          totalNotes: totalNotes,
+          tagCount: s.tagCount || s.totalTopics || 0
         };
       });
       return res.json({
