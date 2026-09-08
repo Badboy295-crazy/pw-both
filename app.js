@@ -904,6 +904,35 @@ function updateBreadcrumbs(view) {
 // ════════════════════════════════════════════════════════════════
 window.APP_CONFIG = null;
 
+function formatBrandHtml(rawName) {
+  const name = (rawName || 'InvalidStudy').trim();
+  let prefix = name;
+  let suffix = '';
+
+  // 1. If contains space (e.g. "Invalid Study" or "Study Hub")
+  if (name.includes(' ')) {
+    const parts = name.split(' ');
+    prefix = parts.slice(0, -1).join(' ');
+    suffix = parts[parts.length - 1];
+  } else {
+    // 2. If CamelCase / compound (e.g. "InvalidStudy" -> "Invalid" + "Study", "RangeXCoder" -> "RangeX" + "Coder")
+    const m = name.match(/^([A-Z]?[a-z0-9]+|[A-Z]+[a-z0-9]*?)([A-Z][a-z0-9]*)$/);
+    if (m && m[1] && m[2]) {
+      prefix = m[1];
+      suffix = m[2];
+    } else if (name.length > 5) {
+      const mid = Math.ceil(name.length / 2);
+      prefix = name.slice(0, mid);
+      suffix = name.slice(mid);
+    }
+  }
+
+  if (suffix) {
+    return `<span class="brand-prefix">${prefix}</span><span class="accent-serif">${suffix}</span>`;
+  }
+  return `<span class="brand-prefix">${prefix}</span>`;
+}
+
 async function loadAppConfig() {
   try {
     const base = (CONFIG.SERVER_URL && CONFIG.SERVER_URL.startsWith('http'))
@@ -922,12 +951,16 @@ async function loadAppConfig() {
 
 function applyBrandConfig(cfg) {
   if (!cfg) return;
+  const bName = cfg.BOT_NAME || 'InvalidStudy';
+  const brandHtml = formatBrandHtml(bName);
+
   // Page title & meta
-  document.title = cfg.WEBAPP_TITLE || cfg.BOT_NAME || 'Study Hub';
+  document.title = cfg.WEBAPP_TITLE || bName;
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute('content', cfg.WEBAPP_TAGLINE || 'Your free study companion');
   const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-  if (appleTitle) appleTitle.setAttribute('content', cfg.WEBAPP_TITLE || cfg.BOT_NAME || 'Study Hub');
+  if (appleTitle) appleTitle.setAttribute('content', cfg.WEBAPP_TITLE || bName);
+
   // Brand accent color CSS variable
   if (cfg.ACCENT_COLOR) {
     const hex = cfg.ACCENT_COLOR.replace('#', '');
@@ -935,26 +968,23 @@ function applyBrandConfig(cfg) {
     const g = parseInt(hex.slice(2, 4), 16) || 107;
     const b = parseInt(hex.slice(4, 6), 16) || 74;
     document.documentElement.style.setProperty('--accent-primary', cfg.ACCENT_COLOR);
+    document.documentElement.style.setProperty('--accent-terracotta', cfg.ACCENT_COLOR);
     document.documentElement.style.setProperty('--accent-primary-glow', `rgba(${r},${g},${b},0.25)`);
     document.documentElement.style.setProperty('--accent-primary-border', `rgba(${r},${g},${b},0.35)`);
   }
-  // Update data-brand-* elements
-  const bName = cfg.BOT_NAME || 'Study Hub';
+
+  // Update stylized brand headers & Guru title
+  document.querySelectorAll('[data-brand-html]').forEach(el => { el.innerHTML = brandHtml; });
+  document.querySelectorAll('.brand-title').forEach(el => { el.innerHTML = brandHtml; });
+  const homeTitle = document.getElementById('home-platform-brand-title');
+  if (homeTitle) homeTitle.innerHTML = brandHtml;
+  const guruTitle = document.getElementById('guru-card-brand-title');
+  if (guruTitle) guruTitle.innerHTML = `${brandHtml} Guru`;
+
+  // Update text-only data-brand-* elements
   document.querySelectorAll('[data-brand-name]').forEach(el => { el.textContent = bName; });
   document.querySelectorAll('[data-brand-powered-by]').forEach(el => { el.textContent = cfg.POWERED_BY || bName; });
   document.querySelectorAll('[data-brand-bot-link]').forEach(el => { el.href = cfg.BOT_LINK || '#'; });
-
-  // Explicitly update header and hero titles
-  const homeTitle = document.getElementById('home-platform-brand-title');
-  if (homeTitle) {
-    const span = homeTitle.querySelector('[data-brand-name]');
-    if (span) span.textContent = bName;
-    else homeTitle.innerHTML = `<span data-brand-name>${bName}</span>`;
-  }
-  document.querySelectorAll('.brand-title').forEach(el => {
-    const span = el.querySelector('[data-brand-name]');
-    if (span) span.textContent = bName;
-  });
 
   // Player badge
   const badge = document.querySelector('.player-badge');
