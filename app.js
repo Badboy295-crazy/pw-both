@@ -23,7 +23,7 @@ const CONFIG = {
   TABS: [
     { type: 'Videos',    label: 'Lectures', icon: '🎬' },
     { type: 'Notes',     label: 'Notes',    icon: '📄' },
-    { type: 'DppNotes',  label: 'DPP',      icon: 'ðŸ“' },
+    { type: 'DppNotes',  label: 'DPP',      icon: '📝' },
     { type: 'DppVideos', label: 'DPP Vid',  icon: '📹' },
   ],
 };
@@ -886,7 +886,7 @@ function updateBreadcrumbs(view) {
   }
   if (view === 'guru') {
     bar.classList.remove('hidden');
-    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span> <span class="crumb-sep">›</span> <span class="crumb-current">🤖 ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
+    trail.innerHTML = `<span class="crumb-link" onclick="navigate('platforms')">🏛️ Platforms</span> <span class="crumb-sep">›</span> <span class="crumb-current">🤖 ${window.APP_CONFIG ? window.APP_CONFIG.BOT_NAME + " Guru" : "Study Guru"}</span>`;
     return;
   }
 
@@ -1020,7 +1020,7 @@ function applyBrandConfig(cfg) {
 }
 
 
-  crumbs.push(`<span class="crumb-link" onclick="navigate('platforms')">ðŸ›ï¸ Platforms</span>`);
+  crumbs.push(`<span class="crumb-link" onclick="navigate('platforms')">🏛️ Platforms</span>`);
 
   if (view === 'home') {
     crumbs.push(`<span class="crumb-sep">›</span>`);
@@ -1338,7 +1338,7 @@ async function loadBatches(reset = false) {
       if (state.batches.length === 0 && grid) {
         grid.innerHTML = `
           <div class="empty-state" style="grid-column:1/-1">
-            <div class="empty-state-icon">ðŸ“­</div>
+            <div class="empty-state-icon">📦</div>
             <div class="empty-state-title">No Batches in ${PROVIDERS[state.provider]?.name || 'Provider'}</div>
             <div class="empty-state-sub">Batches for this platform will sync automatically</div>
           </div>`;
@@ -1414,7 +1414,7 @@ function renderBatchCard(b) {
         ${img ? `<img class="batch-card-img" src="${img}" alt="${name}" loading="lazy" onerror="this.style.display='none'" />` : ''}
         <div class="batch-card-overlay"></div>
         <button class="batch-card-fav-btn" onclick="event.stopPropagation(); toggleFavourite('${bId}')" id="heart-${bId}">
-          ${isFav ? 'â¤ï¸' : 'ðŸ¤'}
+          ${isFav ? '❤️' : '🤍'}
         </button>
       </div>
       <div class="batch-card-body">
@@ -1468,7 +1468,7 @@ function openBatch(batchRef) {
   if (tagBadge) tagBadge.textContent = provTag.toUpperCase();
 
   const batchHeartEl = document.getElementById('batch-view-heart');
-  if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? 'â¤ï¸' : 'ðŸ¤';
+  if (batchHeartEl) batchHeartEl.textContent = state.favourites.has(bId) ? '❤️' : '🤍';
 }
 
 // ─── Instant Search Engine ─────────────────────────────────────
@@ -1506,7 +1506,7 @@ async function doSearch(q) {
   const panel = document.getElementById('search-results-panel');
   if (!panel) return;
   panel.classList.remove('hidden');
-  panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">ðŸ”</div><div class="empty-state-title">Searching...</div></div>`;
+  panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Searching...</div></div>`;
 
   try {
     const providerParam = state.provider ? `&provider=${state.provider}` : '';
@@ -1515,7 +1515,7 @@ async function doSearch(q) {
     const items = res.data || [];
 
     if (!items.length) {
-      panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">ðŸ“­</div><div class="empty-state-title">No matching batches found</div></div>`;
+      panel.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-title">No matching batches found</div></div>`;
       return;
     }
 
@@ -1693,7 +1693,7 @@ async function loadTopics(batchId, subjectId) {
     if (!topics.length) {
       list.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">ðŸ“–</div>
+          <div class="empty-state-icon">📖</div>
           <div class="empty-state-title">No Chapters Found</div>
           <div class="empty-state-sub">Content will appear once scheduled</div>
         </div>`;
@@ -2146,7 +2146,7 @@ function renderNotesItem(item, type) {
     return `
     <div class="content-item" onclick="sendContent('${payloadKey}', '${type}')">
       <div class="content-doc-icon-wrap ${isDpp ? 'doc-dpp-icon' : 'doc-notes-icon'}">
-        ${isDpp ? 'ðŸ“' : '📄'}
+        ${isDpp ? '📝' : '📄'}
       </div>
       <div class="content-info-block">
         <div class="content-item-name">${name}</div>
@@ -2681,7 +2681,7 @@ function renderQualityOptions() {
       const isAct = (window.hlsPlayer.currentLevel === idx);
       html += `
         <button class="quality-item ${isAct ? 'active' : ''}" onclick="setQualityLevel(${idx}, '${res}')">
-          <span>ðŸ“º ${res}</span>
+          <span>📺 ${res}</span>
           ${isAct ? '<span class="quality-check">✓</span>' : ''}
         </button>
       `;
@@ -2704,7 +2704,7 @@ function setQualityLevel(levelIndex, label) {
     window.hlsPlayer.currentLevel = levelIndex;
     const lbl = document.getElementById('quality-label');
     if (lbl) lbl.textContent = label;
-    showToast(`ðŸ“º Quality: ${label}`);
+    showToast(`📺 Quality: ${label}`);
   }
   closeQualityMenu();
   renderQualityOptions();
@@ -2864,12 +2864,12 @@ function toggleFavourite(batchId, batchData = null) {
 
   // Update heart on batch card
   const heartEl = document.getElementById(`heart-${batchId}`);
-  if (heartEl) heartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
+  if (heartEl) heartEl.textContent = state.favourites.has(batchId) ? '❤️' : '🤍';
 
   // Update heart on batch view hero
   const batchHeartEl = document.getElementById('batch-view-heart');
   if (batchHeartEl && state.batch && state.batch._id === batchId) {
-    batchHeartEl.textContent = state.favourites.has(batchId) ? 'â¤ï¸' : 'ðŸ¤';
+    batchHeartEl.textContent = state.favourites.has(batchId) ? '❤️' : '🤍';
   }
 
   updateBatchCounts();
@@ -2884,9 +2884,9 @@ function renderFavourites() {
     if (grid) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-state-icon">â¤ï¸</div>
+          <div class="empty-state-icon">❤️</div>
           <div class="empty-state-title">No Favourites Saved</div>
-          <div class="empty-state-sub">Tap ðŸ¤ on any batch to pin it here for fast 1-tap access</div>
+          <div class="empty-state-sub">Tap 🤍 on any batch to pin it here for fast 1-tap access</div>
         </div>`;
     }
   } else if (grid) {
@@ -3072,7 +3072,7 @@ function openInChromeBrowser() {
   } else {
     window.open(targetUrl, '_blank');
   }
-  showToast('ðŸŒ Opening in Chrome... tap (â‹®) -> "Install App"');
+  showToast('🌐 Opening in Chrome... tap (⋮) -> "Install App"');
 }
 
 async function handleInstallAction() {
@@ -3271,7 +3271,7 @@ function handleGuruPhotoSelected(event) {
         photoStatus.style.color = 'var(--accent-cyan)';
       }
       haptic('light');
-      showToast('ðŸ“· Photo ready! Tap "Ask Guru AI"');
+      showToast('📸 Photo ready! Tap "Ask Guru AI"');
     };
     img.onerror = function() {
       guruAttachedPhotoBase64 = rawData;
@@ -3284,7 +3284,7 @@ function handleGuruPhotoSelected(event) {
         photoStatus.style.color = 'var(--accent-cyan)';
       }
       haptic('light');
-      showToast('ðŸ“· Photo attached! Tap "Ask Guru AI"');
+      showToast('📸 Photo attached! Tap "Ask Guru AI"');
     };
     img.src = rawData;
   };
@@ -3322,7 +3322,7 @@ async function askGuruAI() {
   const loadingText = document.getElementById('guru-loading-text');
   const loadingSubtext = document.getElementById('guru-loading-subtext');
 
-  if (loadingText) loadingText.textContent = 'ðŸ” Reading & scanning question text...';
+  if (loadingText) loadingText.textContent = '🔍 Reading & scanning question text...';
   if (loadingSubtext) loadingSubtext.textContent = 'Analyzing syntax, intent & extracting core concepts...';
 
   loadingCard?.classList.remove('hidden');
@@ -3336,7 +3336,7 @@ async function askGuruAI() {
 
   const startTime = Date.now();
   const timer1 = setTimeout(() => {
-    if (loadingText) loadingText.textContent = 'ðŸ§  Analyzing syllabus & identifying governing laws...';
+    if (loadingText) loadingText.textContent = '🧠 Analyzing syllabus & identifying governing laws...';
     if (loadingSubtext) loadingSubtext.textContent = 'Mapping topic to Physics Wallah / Next Toppers curriculum...';
   }, 750);
 
