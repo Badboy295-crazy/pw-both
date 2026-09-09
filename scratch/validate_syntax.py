@@ -1,83 +1,29 @@
-import os
-import sys
+import os, sys, subprocess
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-def check_brackets(filepath):
-    content = open(filepath, encoding='utf-8', errors='replace').read()
-    stack = []
-    pairs = {')': '(', '}': '{', ']': '['}
-    in_str = None
-    in_regex = False
-    in_comment_line = False
-    in_comment_block = False
-    escape = False
+def test_syntax():
+    # Check node syntax on JS files
+    js_files = ['server/index.js', 'server/dumper.js', 'server/config.js', 'server/build.js', 'webapp/app.js', 'app.js']
+    print("=== CHECKING NODE JS SYNTAX ===")
+    for js in js_files:
+        if os.path.exists(js):
+            res = subprocess.run(['node', '--check', js], capture_output=True, text=True)
+            if res.returncode == 0:
+                print(f"✓ {js} syntax OK")
+            else:
+                print(f"❌ {js} syntax ERROR:\n{res.stderr}")
 
-    i = 0
-    n = len(content)
-    while i < n:
-        c = content[i]
-        
-        if in_comment_line:
-            if c == '\n':
-                in_comment_line = False
-            i += 1
-            continue
-            
-        if in_comment_block:
-            if c == '*' and i + 1 < n and content[i+1] == '/':
-                in_comment_block = False
-                i += 2
-                continue
-            i += 1
-            continue
+    # Check python syntax
+    py_files = ['gen_session.py', 'scratch/test_live_as_providers.py', 'scratch/sync_webapp_to_root.py']
+    print("\n=== CHECKING PYTHON SYNTAX ===")
+    for py in py_files:
+        if os.path.exists(py):
+            res = subprocess.run(['python', '-m', 'py_compile', py], capture_output=True, text=True)
+            if res.returncode == 0:
+                print(f"✓ {py} syntax OK")
+            else:
+                print(f"❌ {py} syntax ERROR:\n{res.stderr}")
 
-        if in_str:
-            if escape:
-                escape = False
-            elif c == '\\':
-                escape = True
-            elif c == in_str:
-                in_str = None
-            i += 1
-            continue
-
-        # Check comment starts
-        if c == '/' and i + 1 < n:
-            if content[i+1] == '/':
-                in_comment_line = True
-                i += 2
-                continue
-            elif content[i+1] == '*':
-                in_comment_block = True
-                i += 2
-                continue
-
-        # Strings
-        if c in ("'", '"', '`'):
-            in_str = c
-            escape = False
-            i += 1
-            continue
-
-        # Brackets
-        if c in ('(', '{', '['):
-            stack.append((c, i))
-        elif c in (')', '}', ']'):
-            if not stack:
-                return False, f'Unmatched closing {c} at pos {i}'
-            top, pos = stack.pop()
-            if pairs[c] != top:
-                return False, f'Mismatched {top} at pos {pos} with {c} at pos {i}'
-        i += 1
-
-    if stack:
-        top, pos = stack[-1]
-        line = content[:pos].count('\n') + 1
-        return False, f'Unclosed {top} from line {line}'
-    return True, 'OK'
-
-for f in ['server/index.js', 'server/config.js', 'webapp/app.js', 'webapp/player.js', 'webapp/lecture_player.js']:
-    if os.path.exists(f):
-        ok, msg = check_brackets(f)
-        print(f'{f}: {msg}')
+if __name__ == '__main__':
+    test_syntax()

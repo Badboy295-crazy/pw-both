@@ -12,7 +12,7 @@
      - 🕒 Smooth 2.8s auto-hide on inactivity, seamlessly toggled on tap.
 
 2. **Breadcrumb Bar Mojibake Fixed:**
-   - Replaced `ðŸ›ï¸ Platforms` with `🏛️ Platforms`.
+   - Replaced `🏛️ Platforms` with `🏛️ Platforms`.
    - Cleaned all breadcrumb separators (`›`) and icons.
 
 3. **Favourite (Heart) Icons Fixed:**

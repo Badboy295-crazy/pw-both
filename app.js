@@ -1579,7 +1579,7 @@ async function loadSubjects(batchId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">⚠️ï¸</div>
+        <div class="error-state-icon">⚠️</div>
         <div class="error-state-title">Failed to load subjects</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadSubjects('${batchId}')">Retry</button>
@@ -1712,7 +1712,7 @@ async function loadTopics(batchId, subjectId) {
   } catch (err) {
     list.innerHTML = `
       <div class="error-state">
-        <div class="error-state-icon">⚠️ï¸</div>
+        <div class="error-state-icon">⚠️</div>
         <div class="error-state-title">Failed to load chapters</div>
         <div class="error-state-msg">${err.message}</div>
         <button class="retry-btn" onclick="loadTopics('${batchId}','${subjectId}')">Retry</button>
@@ -1928,7 +1928,7 @@ async function loadContent(type, reset = false) {
       if (newItems.length === 0) {
         // No new items: The server returned the same dataset or reached the end
         state.contentHasMore[type] = false;
-        showToast('ℹ️ï¸ All items loaded');
+        showToast('ℹ️ All items loaded');
       } else {
         state.content[type].push(...newItems);
         state.contentPage[type]++;
@@ -1958,7 +1958,7 @@ async function loadContent(type, reset = false) {
     if (reset) {
       list.innerHTML = `
         <div class="error-state">
-          <div class="error-state-icon">⚠️ï¸</div>
+          <div class="error-state-icon">⚠️</div>
           <div class="error-state-title">Failed to load content</div>
           <div class="error-state-msg">${err.message}</div>
           <button class="retry-btn" onclick="loadContent('${type}', true)">Retry</button>
@@ -3301,7 +3301,7 @@ function fallbackCopy(text) {
     haptic('success');
     showToast('📋 Unique Invite Link Copied!');
   } catch (e) {
-    showToast('⚠️ï¸ Could not auto-copy. Please select and copy link manually.');
+    showToast('⚠️ Could not auto-copy. Please select and copy link manually.');
   }
   document.body.removeChild(ta);
 }
@@ -3420,7 +3420,7 @@ async function askGuruAI() {
 
   if (!text && !guruAttachedPhotoBase64) {
     haptic('warning');
-    showToast('⚠️ï¸ Please enter a question or upload a photo!');
+    showToast('⚠️ Please enter a question or upload a photo!');
     inputEl?.focus();
     return;
   }
@@ -3450,7 +3450,7 @@ async function askGuruAI() {
   }, 750);
 
   const timer2 = setTimeout(() => {
-    if (loadingText) loadingText.textContent = 'âœï¸ Formulating step-by-step verified solution...';
+    if (loadingText) loadingText.textContent = '✨ Formulating step-by-step verified solution...';
     if (loadingSubtext) loadingSubtext.textContent = 'Finalizing derivations, key formulas & exam takeaways...';
   }, 1600);
 
@@ -3525,7 +3525,7 @@ async function askGuruAI() {
       haptic('success');
     } else {
       haptic('error');
-      showToast(data.message || '⚠️ï¸ Guru could not solve this problem. Please retry!');
+      showToast(data.message || '⚠️ Guru could not solve this problem. Please retry!');
     }
   } catch (err) {
     console.error('Guru AI solver error:', err);

@@ -1649,7 +1649,7 @@ async function sendVideoQualitySelection(chatId, info) {
       const q = qualities[j].replace('p', ''); 
       // Instead of direct URL, use callback to trigger Userbot
       row.push({
-        text: `${qualities[j]} ↗ï¸`,
+        text: `${qualities[j]} ↗`,
         callback_data: `v_${info.batchId}_${info.contentId}_${q}`
       });
     }
@@ -1659,12 +1659,12 @@ async function sendVideoQualitySelection(chatId, info) {
   // Attach Homework / Notes inline buttons
   const validHomeworks = (info.homeworks || []).filter(hw => (Array.isArray(hw?.attachmentIds) && hw.attachmentIds.length > 0) || hw?._id);
   if (validHomeworks.length > 0) {
-    qualityButtons.push([{ text: '⬇️ï¸ Class Notes ⬇️ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ Class Notes ⬇️', callback_data: 'noop' }]);
     validHomeworks.forEach(hw => {
       const att = (Array.isArray(hw?.attachmentIds) && hw.attachmentIds[0]) || hw || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'} ↗ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `📄 ${hw.topic || att.name || 'Notes'} ↗`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || hw._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1685,12 +1685,12 @@ async function sendVideoQualitySelection(chatId, info) {
 
   const validDpps = (info.dpps || []).filter(dpp => (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds.length > 0) || dpp?._id);
   if (validDpps.length > 0) {
-    qualityButtons.push([{ text: '⬇️ï¸ DPPs ⬇️ï¸', callback_data: 'noop' }]);
+    qualityButtons.push([{ text: '⬇️ DPPs ⬇️', callback_data: 'noop' }]);
     validDpps.forEach(dpp => {
       const att = (Array.isArray(dpp?.attachmentIds) && dpp.attachmentIds[0]) || dpp || {};
       const pdfLink = (att.baseUrl && att.key) ? (att.baseUrl + att.key) : (att.key ? ('https://static.pw.live/' + att.key) : null);
       if (pdfLink) {
-        qualityButtons.push([{ text: `📝 ${dpp.topic || att.name || 'DPP'} ↗ï¸`, url: pdfLink }]);
+        qualityButtons.push([{ text: `📝 ${dpp.topic || att.name || 'DPP'} ↗`, url: pdfLink }]);
         // Backup to pdfIndex
         const cKey = att._id || dpp._id;
         if (cKey && !pdfIndex.has(cKey)) {
@@ -1744,7 +1744,7 @@ async function sendPdfDirect(chatId, info) {
     console.log(`[sendPdfDirect] Sending PDF as URL button: ${pdfUrl}`);
     const replyMarkup = {
       inline_keyboard: [
-        [{ text: `${emoji} Open ${label} ↗ï¸`, url: pdfUrl }],
+        [{ text: `${emoji} Open ${label} ↗`, url: pdfUrl }],
         [{ text: 'Close 🔒', callback_data: 'close_msg' }]
       ]
     };
@@ -1773,7 +1773,7 @@ async function sendPdfDirect(chatId, info) {
   console.log(`[sendPdfDirect] Fallback button: batchId=${info.batchId} contentId=${info.contentId}`);
   const replyMarkup = {
     inline_keyboard: [
-      [{ text: `${emoji} Get ${label} ↗ï¸`, callback_data: `n_${info.batchId}_${info.contentId}` }],
+      [{ text: `${emoji} Get ${label} ↗`, callback_data: `n_${info.batchId}_${info.contentId}` }],
       [{ text: 'Close 🔒', callback_data: 'close_msg' }]
     ]
   };
@@ -1986,17 +1986,17 @@ async function performFetch({ reqId, startParam }) {
 // ─── Admin Dashboard & Live Batch Dump Engine ─────────────────
 function getAdminDashboardText() {
   const dumpStatus = getDumpStatus();
-  return `🛡️ï¸ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
-         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+  return `🛡️ *${BRAND.BOT_NAME} — Master Admin Control Panel*\n` +
+         `────────────────────────\n` +
          `👑 *Super Admin:* \`${SUPER_ADMIN}\`\n` +
          `👥 *Admin Count:* \`${adminUsers.size}\`\n` +
          `👥 *Total Bot Users:* \`${knownUsers.size}\`\n` +
          `📥 *Total Files Sent:* \`${globalStats.total_file_requests}\`\n` +
          `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\` items\n` +
          `📦 *Primary Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-         `🛡️ï¸ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
-         `âš™ï¸ *Auto-Dumper Status:* ${dumpStatus.isRunning ? '🟡 `RUNNING`' : '🟢 `IDLE`'}\n` +
-         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+         `🛡️ *Secondary Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+         `⚙️ *Auto-Dumper Status:* ${dumpStatus.isRunning ? '🟡 `RUNNING`' : '🟢 `IDLE`'}\n` +
+         `────────────────────────\n` +
          `👇 _Select an administrative action below:_`;
 }
 
@@ -2027,7 +2027,7 @@ let liveDumpJob = { isRunning: false, msgId: null, chatId: null, lastUpdate: 0 }
 
 async function triggerBatchDumpFlow(targetChatId) {
   if (getDumpStatus().isRunning || liveDumpJob.isRunning) {
-    return bot.sendMessage(targetChatId, '⚠️ï¸ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
+    return bot.sendMessage(targetChatId, '⚠️ *A batch dump is already in progress!*', { parse_mode: 'Markdown' });
   }
 
   liveDumpJob.isRunning = true;
@@ -2048,12 +2048,12 @@ async function triggerBatchDumpFlow(targetChatId) {
     try {
       const waitNotice = p.isWait ? `\n⏳ _[FloodWait] Paused for ${p.waitSec}s..._` : '';
       const text = `🚀 *${(BRAND.BOT_NAME || 'STUDY HUB').toUpperCase()} — LIVE BATCH DUMP*\n` +
-                   `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                   `────────────────────\n` +
                    `📚 *Batch:* [${p.currentBatch || 1}/${p.totalBatches || '?'}] \`${escMd(p.batchName || 'Scanning...')}\`\n` +
                    `📖 *Subject:* \`${escMd(p.subjectName || 'Scanning...')}\`\n` +
                    `🚩 *Chapter:* \`${escMd(p.topicName || 'Scanning...')}\`\n` +
                    `📥 *New Dumped:* \`${p.totalDumped || 0}\`\n` +
-                   `â­ï¸ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
+                   `⭐ *Already Cached:* \`${p.totalSkipped || 0}\`\n` +
                    `💾 *Total Archive Size:* \`${p.totalArchiveSize || lectureIndex.size}\`\n` +
                    `📦 *Channel:* \`${DUMP_CHANNEL_ID}\`` +
                    waitNotice;
@@ -2072,7 +2072,7 @@ async function triggerBatchDumpFlow(targetChatId) {
 
     let failedDetails = '';
     if (summary.totalFailed > 0 && Array.isArray(summary.failedItems)) {
-      failedDetails = `\n\n⚠️ï¸ *Failed / Missed Items (${summary.totalFailed}):*\n` +
+      failedDetails = `\n\n⚠️ *Failed / Missed Items (${summary.totalFailed}):*\n` +
                       summary.failedItems.map((f, i) => `${i + 1}. \`${escMd(f.meta?.name || f.startParam)}\` (${f.reason || 'error'})`).join('\n');
     }
 
@@ -2081,14 +2081,14 @@ async function triggerBatchDumpFlow(targetChatId) {
       : `❌ *Failed / Missed:* \`${summary.totalFailed}\``;
 
     const completionMsg = `🎉 *BATCH DUMP & ARCHIVE COMPLETED!*\n` +
-                          `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                          `────────────────────────\n` +
                           `📥 *Total New Dumped:* \`${summary.totalDumped}\`\n` +
-                          `â­ï¸ *Already in Cache:* \`${summary.totalSkipped}\`\n` +
+                          `⭐ *Already in Cache:* \`${summary.totalSkipped}\`\n` +
                           `${failedLine}\n` +
                           `📊 *Total Archive Database:* \`${summary.totalArchiveSize}\` items\n` +
-                          `â±ï¸ *Time Taken:* \`${summary.durationStr}\`\n` +
+                          `⏱️ *Time Taken:* \`${summary.durationStr}\`\n` +
                           `📦 *Primary Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                          `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                          `🛡️ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
                           `⚡ *Status:* 100% Synced & Ready for 0.1s Fast Delivery!` +
                           failedDetails;
 
@@ -2193,9 +2193,9 @@ if (bot) {
 
       if (data === 'adm_storage_info') {
         const storageMsg = `📦 *Telegram Storage Channels Status*\n` +
-                           `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                           `────────────────────────\n` +
                            `📝 *Primary Channel ID:* \`${DUMP_CHANNEL_ID}\`\n` +
-                           `🛡️ï¸ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                           `🛡️ *Backup Channel ID:* \`${BACKUP_CHANNEL_ID}\`\n` +
                            `💾 *Total Indexed Files:* \`${lectureIndex.size}\` items\n` +
                            `☁️ *Cloud Database:* \`Supabase PostgreSQL\``;
         return bot.sendMessage(q.message.chat.id, storageMsg, { parse_mode: 'Markdown' });
@@ -2251,7 +2251,7 @@ if (bot) {
             parse_mode: 'Markdown',
             reply_markup: {
               inline_keyboard: [
-                [{ text: '📄 Open PDF ↗ï¸', url: cachedPdf.pdf_url }],
+                [{ text: '📄 Open PDF ↗', url: cachedPdf.pdf_url }],
                 [{ text: 'Close 🔒', callback_data: 'close_msg' }]
               ]
             }
@@ -2516,7 +2516,7 @@ if (bot) {
                   }).catch(() => {
                     sendMethod(BACKUP_CHANNEL_ID, fileId, { caption: truncateCaption(dumpCaption) }).catch(() => {});
                   });
-                  console.log(`🛡️ï¸ [Mirrored to Backup Channel] Tag: ${tag}`);
+                  console.log(`🛡️ [Mirrored to Backup Channel] Tag: ${tag}`);
                 }
               })();
             }
@@ -2548,7 +2548,7 @@ if (bot) {
         if (stopped) {
           return bot.sendMessage(msg.chat.id, '🛑 *Batch Dump Cancelled.*', { parse_mode: 'Markdown' });
         } else {
-          return bot.sendMessage(msg.chat.id, 'ℹ️ï¸ *No active dump is currently running.*', { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, 'ℹ️ *No active dump is currently running.*', { parse_mode: 'Markdown' });
         }
       }
 
@@ -2589,7 +2589,7 @@ if (bot) {
         const key = txt.split(' ')[1].trim();
         const cached = lectureIndex.get(key);
         if (cached) {
-          return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\nâ±ï¸ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
+          return bot.sendMessage(msg.chat.id, `✅ *Lecture Cached in Local Archive!*\n\n🔑 *Key:* \`${key}\`\n📦 *Channel:* \`${cached.channel_id}\`\n💬 *Message ID:* \`#${cached.message_id}\`\n📹 *Title:* ${cached.title || 'Lecture'}\n⏱️ *Created:* \`${cached.created_at}\``, { parse_mode: 'Markdown' });
         } else {
           return bot.sendMessage(msg.chat.id, `❌ *Key not found in local index:* \`${key}\``, { parse_mode: 'Markdown' });
         }
@@ -2667,16 +2667,16 @@ if (bot) {
         }
 
         const statsMsg = `📊 *${BRAND.BOT_NAME} — Live Analytics Dashboard*\n` +
-                         `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                         `────────────────────────\n` +
                          `👥 *Total Users:* \`${totalUsers}\`\n` +
                          `🟢 *Active (Last 24h):* \`${active24h}\`\n` +
                          `📥 *Total Files Sent:* \`${totalRequests}\`\n` +
                          `💾 *Indexed Local Lectures:* \`${lectureIndex.size}\`\n` +
                          `📦 *Storage Dump Channel:* \`${DUMP_CHANNEL_ID}\`\n` +
-                         `🛡️ï¸ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
+                         `🛡️ *Backup Channel:* \`${BACKUP_CHANNEL_ID}\`\n` +
                          `🚫 *Banned Users:* \`${bannedCount}\`\n` +
                          `📢 *Broadcasts Sent:* \`${globalStats.total_broadcasts}\`\n` +
-                         `â±ï¸ *Uptime:* \`${uptimeStr}\`\n` +
+                         `⏱️ *Uptime:* \`${uptimeStr}\`\n` +
                          `☁️ *Database:* \`Supabase (Synced)\`` +
                          recentUsersText;
 
@@ -2716,7 +2716,7 @@ if (bot) {
                      `👤 *Name:* ` + escMd(name) + `\n` +
                      `👤 *Username:* ` + uname + `\n` +
                      `🆔 *User ID:* \`` + fromId + `\`\n` +
-                     `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n` +
+                     `──────────────────\n` +
                      `💬 *Message:*\n`;
       try {
         await bot.sendMessage(SUPPORT_GID, header + escMd(msg.text), { parse_mode: 'Markdown', disable_web_page_preview: true });
